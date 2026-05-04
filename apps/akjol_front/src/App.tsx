@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import StartingPoint from './components/StartingPoint';
 import ExploreTimeline from './components/ExploreTimeline';
 import AppHeader from './components/AppHeader';
@@ -133,6 +134,16 @@ const App = () => {
         onConfirm={app.handleConfirmImport}
         formatDateTime={formatDateTime}
       />
+
+      <Link
+        href="/new-ui"
+        className="fixed bottom-5 right-5 z-50 group inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-2xl hover:scale-[1.02]"
+        style={{ background: '#ee7768' }}
+      >
+        <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
+        Voir la nouvelle UI
+        <span className="text-white/80 group-hover:translate-x-0.5 transition">→</span>
+      </Link>
     </div>
   );
 };

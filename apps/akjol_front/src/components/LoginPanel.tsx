@@ -18,7 +18,15 @@ const LoginPanel = ({
   testUsersHint
 }: LoginPanelProps) => {
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#121212] flex items-center justify-center px-4 transition-colors duration-200">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#121212] flex items-center justify-center px-4 transition-colors duration-200 relative">
+      <a
+        href="/new-ui"
+        className="fixed top-5 right-5 z-50 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:shadow-2xl hover:scale-[1.02]"
+        style={{ background: '#ee7768' }}
+      >
+        <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
+        Voir la nouvelle UI →
+      </a>
       <div className="w-full max-w-md bg-white dark:bg-[#27272A] rounded-2xl shadow-xl dark:shadow-gray-900/50 p-8 border border-[#E2E8F0] dark:border-[#27272A]">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F3F4F6]">Connexion</h1>
