@@ -19,11 +19,15 @@ type State = {
   hydrated: boolean;
   savedPlan: SavedItem[];
   comparator: string[];
+  comparatorSchools: string[];
   setPassport: (p: Passport) => void;
   patchPassport: (patch: (p: Passport) => Passport) => void;
   reset: () => void;
   toggleSaved: (programId: string) => void;
+  setSavedPrograms: (ids: string[]) => void;
   toggleCompare: (programId: string) => void;
+  toggleCompareSchool: (schoolId: string) => void;
+  clearComparator: () => void;
   isComplete: () => boolean;
 };
 
@@ -34,9 +38,16 @@ export const usePassportStore = create<State>()(
       hydrated: false,
       savedPlan: [],
       comparator: [],
+      comparatorSchools: [],
       setPassport: (p) => set({ passport: p }),
       patchPassport: (patch) => set({ passport: patch(get().passport) }),
-      reset: () => set({ passport: EMPTY_PASSPORT, savedPlan: [], comparator: [] }),
+      reset: () =>
+        set({
+          passport: EMPTY_PASSPORT,
+          savedPlan: [],
+          comparator: [],
+          comparatorSchools: [],
+        }),
       toggleSaved: (programId) => {
         const list = get().savedPlan;
         const exists = list.find((s) => s.programId === programId);
@@ -46,14 +57,27 @@ export const usePassportStore = create<State>()(
             : [...list, { programId, addedAt: new Date().toISOString() }],
         });
       },
+      setSavedPrograms: (ids) => {
+        const now = new Date().toISOString();
+        set({ savedPlan: ids.map((id) => ({ programId: id, addedAt: now })) });
+      },
       toggleCompare: (programId) => {
         const list = get().comparator;
         if (list.includes(programId)) {
           set({ comparator: list.filter((id) => id !== programId) });
-        } else if (list.length < 3) {
+        } else if (list.length < 4) {
           set({ comparator: [...list, programId] });
         }
       },
+      toggleCompareSchool: (schoolId) => {
+        const list = get().comparatorSchools;
+        if (list.includes(schoolId)) {
+          set({ comparatorSchools: list.filter((id) => id !== schoolId) });
+        } else if (list.length < 4) {
+          set({ comparatorSchools: [...list, schoolId] });
+        }
+      },
+      clearComparator: () => set({ comparator: [], comparatorSchools: [] }),
       isComplete: () => {
         const p = get().passport;
         return Boolean(

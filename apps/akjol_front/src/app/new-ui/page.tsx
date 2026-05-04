@@ -1,14 +1,48 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowRight, Compass, Globe2, Shield } from "lucide-react";
 import { PageContainer } from "../../new-ui/components/PageContainer";
 import { usePassportStore } from "../../new-ui/store/passport-store";
+import { useLivesStore } from "../../new-ui/store/lives-store";
 
 export default function LandingPage() {
+  return (
+    <Suspense fallback={null}>
+      <LandingInner />
+    </Suspense>
+  );
+}
+
+function LandingInner() {
   const isComplete = usePassportStore((s) => s.isComplete());
+  const importLifeFromToken = useLivesStore((s) => s.importLifeFromToken);
+  const params = useSearchParams();
+  const router = useRouter();
+  const [imported, setImported] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = params.get("import");
+    if (token) {
+      const id = importLifeFromToken(token);
+      if (id) {
+        setImported("Vie importée — ouvre le menu « Mes vies » pour la charger.");
+      } else {
+        setImported("Token invalide ou corrompu.");
+      }
+      router.replace("/new-ui", { scroll: false });
+    }
+  }, [params, importLifeFromToken, router]);
+
   return (
     <PageContainer className="pt-12">
+      {imported ? (
+        <div className="mb-6 rounded-xl bg-[#a3cf9120] border border-[#a3cf91]/40 px-4 py-3 text-sm text-[#3a6f2c]">
+          {imported}
+        </div>
+      ) : null}
       <section className="max-w-3xl">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ee7768]/10 text-[#a8463a] text-xs font-medium mb-6">
           <Compass size={13} /> Phase 0 — passeport + cas Léa (FR)

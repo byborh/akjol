@@ -45,10 +45,20 @@ export type AdmissionPlatform =
   | "common_app"
   | "direct";
 
+export type SchoolMeta = {
+  name: string;
+  city: string;
+  rating?: number;
+  websiteUrl?: string;
+  jpoUrl?: string;
+  description?: string;
+  type?: "université" | "grande école" | "lycée" | "IUT" | "école privée" | "autre";
+};
+
 export type Program = {
   id: string;
   countryRef: ISO2;
-  school: { name: string; city: string };
+  school: SchoolMeta;
   title: string;
   level: ProgramLevel;
   durationYears: number;
@@ -70,6 +80,23 @@ export type Program = {
   description: string;
   recommendsCertificate?: { code: string; minScore: number; gainPct: number };
   recommendsInternshipWeeks?: number;
+  resultingDiplomaCode: string;
+  resultingDiplomaLabel: string;
+};
+
+export type TrajectoryStep = {
+  programId: string;
+  resultingDiplomaCode: string;
+  resultingDiplomaLabel: string;
+  resultingLevel: ProgramLevel;
+  countryRef: ISO2;
+  yearsAdded: number;
+};
+
+export type FromOverride = {
+  code: string;
+  label: string;
+  countryRef: ISO2;
 };
 
 export type Condition = { label: string; met: boolean; detail?: string };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { NewUINav } from "../../new-ui/components/NewUINav";
 import { PassportFloat } from "../../new-ui/components/PassportFloat";
+import { CompareDrawer } from "../../new-ui/components/CompareDrawer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -22,8 +23,9 @@ export default function NewUILayout({ children }: { children: React.ReactNode })
       }}
     >
       <NewUINav />
-      <main className="pb-24">{children}</main>
+      <main className="pb-32">{children}</main>
       <PassportFloat />
+      <CompareDrawer />
     </div>
   );
 }

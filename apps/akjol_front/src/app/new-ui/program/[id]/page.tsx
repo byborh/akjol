@@ -2,9 +2,10 @@
 
 import { useMemo, use } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   BookmarkPlus,
   BookmarkCheck,
   Building2,
@@ -21,10 +22,13 @@ import {
 import { PageContainer } from "../../../../new-ui/components/PageContainer";
 import { GaugeCircular } from "../../../../new-ui/components/GaugeCircular";
 import { StatusBadge } from "../../../../new-ui/components/StatusBadge";
+import { TrajectoryBar } from "../../../../new-ui/components/TrajectoryBar";
 import { findProgram } from "../../../../new-ui/data/programs";
 import { findCountry } from "../../../../new-ui/data/countries";
 import { computeFeasibility } from "../../../../new-ui/engine/feasibility";
 import { usePassportStore } from "../../../../new-ui/store/passport-store";
+import { applyTrajectory, useTrajectoryStore } from "../../../../new-ui/store/trajectory-store";
+import { findSchoolByProgram } from "../../../../new-ui/data/schools";
 
 const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
   parcoursup: { name: "Parcoursup", url: "https://www.parcoursup.gouv.fr" },
@@ -35,6 +39,7 @@ const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
 };
 
 export default function ProgramPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
   const { id } = use(params);
   const program = findProgram(id);
   const passport = usePassportStore((s) => s.passport);
@@ -42,10 +47,17 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
   const toggleSaved = usePassportStore((s) => s.toggleSaved);
   const toggleCompare = usePassportStore((s) => s.toggleCompare);
   const comparator = usePassportStore((s) => s.comparator);
+  const fromOverride = useTrajectoryStore((s) => s.fromOverride);
+  const steps = useTrajectoryStore((s) => s.steps);
+  const pushStep = useTrajectoryStore((s) => s.pushStepFromProgramId);
 
+  const effective = useMemo(
+    () => applyTrajectory(passport, { fromOverride, steps }),
+    [passport, fromOverride, steps],
+  );
   const feasibility = useMemo(
-    () => (program ? computeFeasibility(passport, program) : null),
-    [program, passport],
+    () => (program ? computeFeasibility(effective, program) : null),
+    [program, effective],
   );
 
   if (!program || !feasibility) return notFound();
@@ -54,9 +66,18 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
   const isSaved = Boolean(savedPlan.find((s) => s.programId === program.id));
   const inCompare = comparator.includes(program.id);
   const platform = PLATFORM_LABELS[program.admissionPlatform];
+  const alreadyInTrajectory = steps.some((s) => s.programId === program.id);
+  const canContinue = !alreadyInTrajectory && feasibility.status !== "closed";
+
+  function continueFromHere() {
+    pushStep(program!.id);
+    router.push("/new-ui/explore");
+  }
 
   return (
-    <PageContainer>
+    <>
+      <TrajectoryBar />
+      <PageContainer>
       <Link
         href="/new-ui/explore"
         className="inline-flex items-center gap-1 text-sm text-[#1a1d24]/60 hover:text-[#1a1d24] mb-6"
@@ -73,7 +94,14 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
           {program.title}
         </h1>
         <div className="text-white/70 text-sm mt-2 inline-flex items-center gap-2">
-          <Building2 size={14} /> {program.school.name} · {program.school.city}
+          <Building2 size={14} />
+          <Link
+            href={`/new-ui/school/${findSchoolByProgram(program)?.id ?? ""}`}
+            className="hover:text-white hover:underline transition"
+          >
+            {program.school.name}
+          </Link>
+          · {program.school.city}
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 mt-5 text-[13px] text-white/80">
           <span className="inline-flex items-center gap-1.5">
@@ -205,18 +233,32 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
               size={120}
             />
           </div>
+          {canContinue ? (
+            <button
+              onClick={continueFromHere}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium text-white shadow-sm hover:shadow-md transition"
+              style={{ background: "#ee7768" }}
+              title="Empile ce diplôme dans le voyage virtuel et explore la suite"
+            >
+              Continuer depuis ici <ArrowRight size={16} />
+            </button>
+          ) : null}
           <button
             onClick={() => toggleSaved(program.id)}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium text-white"
-            style={{ background: isSaved ? "#a3cf91" : "#ee7768" }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-sm border transition"
+            style={{
+              borderColor: isSaved ? "#a3cf91" : "#0000000d",
+              background: isSaved ? "#a3cf9120" : "#fff",
+              color: isSaved ? "#3a6f2c" : "#1a1d24",
+            }}
           >
             {isSaved ? (
               <>
-                <BookmarkCheck size={16} /> Dans mon plan
+                <BookmarkCheck size={14} /> Dans mon plan
               </>
             ) : (
               <>
-                <BookmarkPlus size={16} /> Ajouter à mon plan
+                <BookmarkPlus size={14} /> Ajouter à mon plan
               </>
             )}
           </button>
@@ -231,14 +273,21 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
           >
             {inCompare ? "Retirer du comparateur" : "Comparer avec…"}
           </button>
+          <Link
+            href={`/new-ui/school/${findSchoolByProgram(program)?.id ?? ""}`}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm border border-black/10 hover:border-[#ee7768] transition"
+          >
+            <Building2 size={14} /> Visiter l'établissement
+          </Link>
           <div className="rounded-xl bg-white border border-black/5 p-4 text-[12px] text-[#1a1d24]/70 leading-relaxed">
             <strong className="text-[#1a1d24]">Honnêteté épistémique.</strong> La probabilité affichée est
-            calculée à partir de ton passeport et de la base AkJol — elle est toujours donnée avec son
-            intervalle de confiance et la taille d'échantillon. <em>Pas de promesse.</em>
+            calculée à partir de ton passeport (ou du voyage virtuel courant) et de la base AkJol — elle est
+            toujours donnée avec son intervalle de confiance et la taille d'échantillon. <em>Pas de promesse.</em>
           </div>
         </aside>
       </div>
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 }
 
