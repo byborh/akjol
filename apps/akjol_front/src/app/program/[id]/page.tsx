@@ -19,16 +19,17 @@ import {
   Sparkles,
   XCircle,
 } from "lucide-react";
-import { PageContainer } from "../../../new-ui/components/PageContainer";
-import { GaugeCircular } from "../../../new-ui/components/GaugeCircular";
-import { StatusBadge } from "../../../new-ui/components/StatusBadge";
-import { TrajectoryBar } from "../../../new-ui/components/TrajectoryBar";
-import { findProgram } from "../../../new-ui/data/programs";
-import { findCountry } from "../../../new-ui/data/countries";
-import { computeFeasibility } from "../../../new-ui/engine/feasibility";
-import { usePassportStore } from "../../../new-ui/store/passport-store";
-import { applyTrajectory, useTrajectoryStore } from "../../../new-ui/store/trajectory-store";
-import { findSchoolByProgram } from "../../../new-ui/data/schools";
+import { PageContainer } from "../../../components/PageContainer";
+import { GaugeCircular } from "../../../components/GaugeCircular";
+import { StatusBadge } from "../../../components/StatusBadge";
+import { TrajectoryBar } from "../../../components/TrajectoryBar";
+import { findProgram } from "../../../data/programs";
+import { findCountry } from "../../../data/countries";
+import { computeFeasibility } from "../../../engine/feasibility";
+import { usePassportStore } from "../../../store/passport-store";
+import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
+import { findSchoolByProgram } from "../../../data/schools";
+import { useMounted } from "../../../hooks/useMounted";
 
 const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
   parcoursup: { name: "Parcoursup", url: "https://www.parcoursup.gouv.fr" },
@@ -40,6 +41,7 @@ const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
 
 export default function ProgramPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const mounted = useMounted();
   const { id } = use(params);
   const program = findProgram(id);
   const passport = usePassportStore((s) => s.passport);
@@ -60,6 +62,7 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
     [program, effective],
   );
 
+  if (!mounted) return null;
   if (!program || !feasibility) return notFound();
 
   const country = findCountry(program.countryRef);

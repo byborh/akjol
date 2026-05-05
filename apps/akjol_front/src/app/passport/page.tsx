@@ -3,15 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
-import { PageContainer } from "../../new-ui/components/PageContainer";
-import { findCountry } from "../../new-ui/data/countries";
-import { findProgram } from "../../new-ui/data/programs";
-import { usePassportStore } from "../../new-ui/store/passport-store";
+import { PageContainer } from "../../components/PageContainer";
+import { findCountry } from "../../data/countries";
+import { findProgram } from "../../data/programs";
+import { usePassportStore } from "../../store/passport-store";
+import { useMounted } from "../../hooks/useMounted";
 
 const TABS = ["Mon profil", "Mon plan", "Historique"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function PassportPage() {
+  const mounted = useMounted();
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
   const savedPlan = usePassportStore((s) => s.savedPlan);
@@ -21,6 +23,7 @@ export default function PassportPage() {
   const [tab, setTab] = useState<Tab>("Mon profil");
   const country = findCountry(passport.origin.country);
 
+  if (!mounted) return null;
   if (!isComplete) {
     return (
       <PageContainer className="max-w-xl text-center pt-16">

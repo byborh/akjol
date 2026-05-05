@@ -4,19 +4,20 @@ import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { LayoutGrid, Map as MapIcon, Search, Sparkles, X } from "lucide-react";
-import { PageContainer } from "../../new-ui/components/PageContainer";
-import { SchoolCard } from "../../new-ui/components/SchoolCard";
-import { GaugeCircular } from "../../new-ui/components/GaugeCircular";
-import { StatusBadge } from "../../new-ui/components/StatusBadge";
-import { PROGRAMS } from "../../new-ui/data/programs";
-import { COUNTRIES } from "../../new-ui/data/countries";
-import { getAllSchools, getUniqueCities } from "../../new-ui/data/schools";
-import { computeFeasibility } from "../../new-ui/engine/feasibility";
-import { usePassportStore } from "../../new-ui/store/passport-store";
-import { applyTrajectory, useTrajectoryStore } from "../../new-ui/store/trajectory-store";
-import type { Program, ProgramLevel } from "../../new-ui/types";
+import { PageContainer } from "../../components/PageContainer";
+import { SchoolCard } from "../../components/SchoolCard";
+import { GaugeCircular } from "../../components/GaugeCircular";
+import { StatusBadge } from "../../components/StatusBadge";
+import { PROGRAMS } from "../../data/programs";
+import { COUNTRIES } from "../../data/countries";
+import { getAllSchools, getUniqueCities } from "../../data/schools";
+import { computeFeasibility } from "../../engine/feasibility";
+import { usePassportStore } from "../../store/passport-store";
+import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
+import { useMounted } from "../../hooks/useMounted";
+import type { Program, ProgramLevel } from "../../types";
 
-const SchoolMap = dynamic(() => import("../../new-ui/components/SchoolMap"), {
+const SchoolMap = dynamic(() => import("../../components/SchoolMap"), {
   ssr: false,
   loading: () => (
     <div className="rounded-xl border border-black/5 bg-white h-[480px] flex items-center justify-center text-sm text-[#1a1d24]/50">
@@ -56,6 +57,7 @@ export default function CatalogPage() {
 }
 
 function CatalogInner() {
+  const mounted = useMounted();
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
@@ -70,8 +72,8 @@ function CatalogInner() {
   const [city, setCity] = useState("");
 
   const effective = useMemo(
-    () => (isComplete ? applyTrajectory(passport, { fromOverride, steps }) : null),
-    [passport, fromOverride, steps, isComplete],
+    () => (mounted && isComplete ? applyTrajectory(passport, { fromOverride, steps }) : null),
+    [mounted, passport, fromOverride, steps, isComplete],
   );
 
   const filteredFormations = useMemo(() => {

@@ -3,17 +3,19 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Building2, ExternalLink, GraduationCap, Sparkles, Star, X } from "lucide-react";
-import { PageContainer } from "../../new-ui/components/PageContainer";
-import { GaugeCircular } from "../../new-ui/components/GaugeCircular";
-import { StatusBadge } from "../../new-ui/components/StatusBadge";
-import { findProgram } from "../../new-ui/data/programs";
-import { findSchool } from "../../new-ui/data/schools";
-import { findCountry } from "../../new-ui/data/countries";
-import { computeFeasibility } from "../../new-ui/engine/feasibility";
-import { usePassportStore } from "../../new-ui/store/passport-store";
-import { applyTrajectory, useTrajectoryStore } from "../../new-ui/store/trajectory-store";
+import { PageContainer } from "../../components/PageContainer";
+import { GaugeCircular } from "../../components/GaugeCircular";
+import { StatusBadge } from "../../components/StatusBadge";
+import { findProgram } from "../../data/programs";
+import { findSchool } from "../../data/schools";
+import { findCountry } from "../../data/countries";
+import { computeFeasibility } from "../../engine/feasibility";
+import { usePassportStore } from "../../store/passport-store";
+import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
+import { useMounted } from "../../hooks/useMounted";
 
 export default function ComparePage() {
+  const mounted = useMounted();
   const programs = usePassportStore((s) => s.comparator);
   const schools = usePassportStore((s) => s.comparatorSchools);
   const togglePr = usePassportStore((s) => s.toggleCompare);
@@ -31,6 +33,7 @@ export default function ComparePage() {
   const programItems = programs.map(findProgram).filter(Boolean) as NonNullable<ReturnType<typeof findProgram>>[];
   const schoolItems = schools.map(findSchool).filter(Boolean) as NonNullable<ReturnType<typeof findSchool>>[];
 
+  if (!mounted) return null;
   if (programItems.length === 0 && schoolItems.length === 0) {
     return (
       <PageContainer className="max-w-xl text-center pt-16">

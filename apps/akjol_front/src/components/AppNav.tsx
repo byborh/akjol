@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LivesMenu } from "./LivesMenu";
 
-export function NewUINav() {
+export function AppNav() {
   const pathname = usePathname();
   const isLanding = pathname === "/";
   return (

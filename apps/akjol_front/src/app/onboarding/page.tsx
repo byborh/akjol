@@ -3,13 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
-import { PageContainer } from "../../new-ui/components/PageContainer";
-import { StepBar } from "../../new-ui/components/StepBar";
-import { COUNTRIES } from "../../new-ui/data/countries";
-import { CEFR_LEVELS, LANGUAGES, CERTIFICATES } from "../../new-ui/data/languages";
-import { getDiplomasForCountry } from "../../new-ui/data/diplomas";
-import { usePassportStore } from "../../new-ui/store/passport-store";
-import type { CEFR, Passport } from "../../new-ui/types";
+import { PageContainer } from "../../components/PageContainer";
+import { StepBar } from "../../components/StepBar";
+import { COUNTRIES } from "../../data/countries";
+import { CEFR_LEVELS, LANGUAGES, CERTIFICATES } from "../../data/languages";
+import { getDiplomasForCountry } from "../../data/diplomas";
+import { usePassportStore } from "../../store/passport-store";
+import type { CEFR, Passport } from "../../types";
 
 const TOTAL_STEPS = 5;
 

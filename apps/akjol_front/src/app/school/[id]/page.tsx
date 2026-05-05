@@ -12,14 +12,15 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
-import { PageContainer } from "../../../new-ui/components/PageContainer";
-import { GaugeCircular } from "../../../new-ui/components/GaugeCircular";
-import { StatusBadge } from "../../../new-ui/components/StatusBadge";
-import { findSchool } from "../../../new-ui/data/schools";
-import { findCountry } from "../../../new-ui/data/countries";
-import { computeFeasibility } from "../../../new-ui/engine/feasibility";
-import { usePassportStore } from "../../../new-ui/store/passport-store";
-import { applyTrajectory, useTrajectoryStore } from "../../../new-ui/store/trajectory-store";
+import { PageContainer } from "../../../components/PageContainer";
+import { GaugeCircular } from "../../../components/GaugeCircular";
+import { StatusBadge } from "../../../components/StatusBadge";
+import { findSchool } from "../../../data/schools";
+import { findCountry } from "../../../data/countries";
+import { computeFeasibility } from "../../../engine/feasibility";
+import { usePassportStore } from "../../../store/passport-store";
+import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
+import { useMounted } from "../../../hooks/useMounted";
 import { GitCompare } from "lucide-react";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -32,6 +33,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function SchoolPage({ params }: { params: Promise<{ id: string }> }) {
+  const mounted = useMounted();
   const { id } = use(params);
   const school = findSchool(id);
   const passport = usePassportStore((s) => s.passport);
@@ -46,6 +48,7 @@ export default function SchoolPage({ params }: { params: Promise<{ id: string }>
     [passport, fromOverride, steps, isComplete],
   );
 
+  if (!mounted) return null;
   if (!school) return notFound();
 
   const country = findCountry(school.countryRef);

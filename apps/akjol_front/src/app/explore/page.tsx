@@ -3,16 +3,17 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Filter, Sparkles } from "lucide-react";
-import { PageContainer } from "../../new-ui/components/PageContainer";
-import { ProgramCard } from "../../new-ui/components/ProgramCard";
-import { TrajectoryBar } from "../../new-ui/components/TrajectoryBar";
-import { FromToSearch } from "../../new-ui/components/FromToSearch";
-import { PROGRAMS } from "../../new-ui/data/programs";
-import { COUNTRIES } from "../../new-ui/data/countries";
-import { computeFeasibility } from "../../new-ui/engine/feasibility";
-import { usePassportStore } from "../../new-ui/store/passport-store";
-import { applyTrajectory, useTrajectoryStore } from "../../new-ui/store/trajectory-store";
-import type { FeasibilityStatus } from "../../new-ui/types";
+import { PageContainer } from "../../components/PageContainer";
+import { ProgramCard } from "../../components/ProgramCard";
+import { TrajectoryBar } from "../../components/TrajectoryBar";
+import { FromToSearch } from "../../components/FromToSearch";
+import { PROGRAMS } from "../../data/programs";
+import { COUNTRIES } from "../../data/countries";
+import { computeFeasibility } from "../../engine/feasibility";
+import { usePassportStore } from "../../store/passport-store";
+import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
+import { useMounted } from "../../hooks/useMounted";
+import type { FeasibilityStatus } from "../../types";
 
 const STATUS_ORDER: Record<FeasibilityStatus, number> = {
   open: 0,
@@ -30,6 +31,7 @@ export default function ExplorePage() {
 }
 
 function ExploreInner() {
+  const mounted = useMounted();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -104,7 +106,7 @@ function ExploreInner() {
     return { open, ambre, closed };
   }, [enriched]);
 
-  if (hydrated && !isComplete) {
+  if (mounted && hydrated && !isComplete) {
     return (
       <PageContainer className="max-w-xl text-center pt-16">
         <Sparkles size={28} className="mx-auto text-[#ee7768] mb-3" />

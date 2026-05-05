@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { NewUINav } from "../new-ui/components/NewUINav";
-import { PassportFloat } from "../new-ui/components/PassportFloat";
-import { CompareDrawer } from "../new-ui/components/CompareDrawer";
-import { RehydrateStores } from "../new-ui/components/RehydrateStores";
+import { AppNav } from "../components/AppNav";
+import { PassportFloat } from "../components/PassportFloat";
+import { CompareDrawer } from "../components/CompareDrawer";
+import { RehydrateStores } from "../components/RehydrateStores";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         }}
       >
         <RehydrateStores />
-        <NewUINav />
+        <AppNav />
         <main className="pb-32">{children}</main>
         <PassportFloat />
         <CompareDrawer />

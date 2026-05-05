@@ -4,9 +4,10 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowRight, Compass, Globe2, Shield } from "lucide-react";
-import { PageContainer } from "../new-ui/components/PageContainer";
-import { usePassportStore } from "../new-ui/store/passport-store";
-import { useLivesStore } from "../new-ui/store/lives-store";
+import { PageContainer } from "../components/PageContainer";
+import { usePassportStore } from "../store/passport-store";
+import { useLivesStore } from "../store/lives-store";
+import { useMounted } from "../hooks/useMounted";
 
 export default function LandingPage() {
   return (
@@ -17,11 +18,13 @@ export default function LandingPage() {
 }
 
 function LandingInner() {
+  const mounted = useMounted();
   const isComplete = usePassportStore((s) => s.isComplete());
   const importLifeFromToken = useLivesStore((s) => s.importLifeFromToken);
   const params = useSearchParams();
   const router = useRouter();
   const [imported, setImported] = useState<string | null>(null);
+  const showExploreCTA = mounted && isComplete;
 
   useEffect(() => {
     const token = params.get("import");
@@ -60,23 +63,13 @@ function LandingInner() {
         </p>
 
         <div className="flex flex-wrap gap-3 mt-8">
-          {isComplete ? (
-            <Link
-              href="/explore"
-              className="inline-flex items-center gap-2 rounded-lg px-5 py-3 font-medium text-white"
-              style={{ background: "#ee7768" }}
-            >
-              Voir mes possibilités <ArrowRight size={16} />
-            </Link>
-          ) : (
-            <Link
-              href="/onboarding"
-              className="inline-flex items-center gap-2 rounded-lg px-5 py-3 font-medium text-white"
-              style={{ background: "#ee7768" }}
-            >
-              Construire mon passeport <ArrowRight size={16} />
-            </Link>
-          )}
+          <Link
+            href={showExploreCTA ? "/explore" : "/onboarding"}
+            className="inline-flex items-center gap-2 rounded-lg px-5 py-3 font-medium text-white"
+            style={{ background: "#ee7768" }}
+          >
+            {showExploreCTA ? "Voir mes possibilités" : "Construire mon passeport"} <ArrowRight size={16} />
+          </Link>
           <Link
             href="/passport"
             className="inline-flex items-center gap-2 rounded-lg px-5 py-3 font-medium text-[#1a1d24] border border-black/10 hover:border-[#ee7768] transition"
