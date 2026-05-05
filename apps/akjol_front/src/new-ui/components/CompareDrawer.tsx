@@ -5,8 +5,10 @@ import { ArrowRight, Building2, GraduationCap, X } from "lucide-react";
 import { usePassportStore } from "../store/passport-store";
 import { findProgram } from "../data/programs";
 import { findSchool } from "../data/schools";
+import { useMounted } from "../hooks/useMounted";
 
 export function CompareDrawer() {
+  const mounted = useMounted();
   const programs = usePassportStore((s) => s.comparator);
   const schools = usePassportStore((s) => s.comparatorSchools);
   const togglePr = usePassportStore((s) => s.toggleCompare);
@@ -14,7 +16,7 @@ export function CompareDrawer() {
   const clear = usePassportStore((s) => s.clearComparator);
 
   const total = programs.length + schools.length;
-  if (total === 0) return null;
+  if (!mounted || total === 0) return null;
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-2rem)]">
@@ -66,7 +68,7 @@ export function CompareDrawer() {
             Vider
           </button>
           <Link
-            href="/new-ui/compare"
+            href="/compare"
             className="inline-flex items-center gap-1 text-[12px] font-semibold rounded-lg px-3 py-1.5 text-white transition"
             style={{ background: "#ee7768" }}
           >

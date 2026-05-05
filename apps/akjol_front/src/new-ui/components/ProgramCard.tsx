@@ -31,7 +31,7 @@ export function ProgramCard({ program, feasibility }: Props) {
       <div className="p-4">
         <div className="flex items-start gap-4">
           <Link
-            href={`/new-ui/program/${program.id}`}
+            href={`/program/${program.id}`}
             className="flex-1 min-w-0 group"
           >
             <div className="flex items-center gap-2 mb-1">
@@ -59,7 +59,7 @@ export function ProgramCard({ program, feasibility }: Props) {
               </span>
             </div>
           </Link>
-          <Link href={`/new-ui/program/${program.id}`} className="shrink-0">
+          <Link href={`/program/${program.id}`} className="shrink-0">
             <GaugeCircular
               value={feasibility.probability.value}
               ci={feasibility.probability.ci}
@@ -72,7 +72,7 @@ export function ProgramCard({ program, feasibility }: Props) {
       </div>
       <div className="border-t border-black/5 px-4 py-2 flex items-center justify-between gap-2">
         <Link
-          href={`/new-ui/program/${program.id}`}
+          href={`/program/${program.id}`}
           className="text-[12px] text-[#1a1d24]/50 hover:text-[#1a1d24] transition"
         >
           Voir la fiche →

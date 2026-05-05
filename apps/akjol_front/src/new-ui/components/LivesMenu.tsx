@@ -6,10 +6,12 @@ import { useLivesStore } from "../store/lives-store";
 import { usePassportStore } from "../store/passport-store";
 import { useTrajectoryStore } from "../store/trajectory-store";
 import type { Life } from "../store/lives-store";
+import { useMounted } from "../hooks/useMounted";
 
 const EMOJIS = ["🚀", "🎓", "🌍", "🧠", "⚙️", "🩺", "🎨", "💼", "🔭", "🌱"];
 
 export function LivesMenu() {
+  const mounted = useMounted();
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
   const setPassport = usePassportStore((s) => s.setPassport);
@@ -81,7 +83,7 @@ export function LivesMenu() {
   async function shareLife(life: Life) {
     const token = exportLifeAsToken(life.id);
     if (!token) return;
-    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/new-ui?import=${token}`;
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/?import=${token}`;
     try {
       await navigator.clipboard.writeText(url);
       flash("Lien copié dans le presse-papier");
@@ -108,6 +110,18 @@ export function LivesMenu() {
     } else {
       flash("Token invalide");
     }
+  }
+
+  if (!mounted) {
+    return (
+      <button
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium bg-[#ee776815] text-[#a8463a]"
+        suppressHydrationWarning
+      >
+        <Bookmark size={12} />
+        Mes vies
+      </button>
+    );
   }
 
   return (

@@ -131,6 +131,7 @@ export const useLivesStore = create<State>()(
     {
       name: "akjol-lives-v1",
       storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true;
       },

@@ -129,7 +129,7 @@ export default function SchoolMap({ schools, matchedProgramsBySchool = {} }: Pro
                       {c.schools.map((s) => (
                         <li key={s.id} style={{ marginBottom: 4 }}>
                           <Link
-                            href={`/new-ui/school/${s.id}`}
+                            href={`/school/${s.id}`}
                             style={{ color: "#ee7768", fontWeight: 500 }}
                           >
                             {s.name}

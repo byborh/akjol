@@ -7,8 +7,10 @@ import { usePassportStore } from "../store/passport-store";
 import { findCountry } from "../data/countries";
 import { findProgram } from "../data/programs";
 import { DIPLOMAS, getDiplomasForCountry } from "../data/diplomas";
+import { useMounted } from "../hooks/useMounted";
 
 export function TrajectoryBar() {
+  const mounted = useMounted();
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
@@ -31,7 +33,7 @@ export function TrajectoryBar() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  if (!isComplete) return null;
+  if (!mounted || !isComplete) return null;
 
   const country = findCountry(fromOverride?.countryRef ?? passport.origin.country);
   const startLabel = fromOverride

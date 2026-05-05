@@ -90,6 +90,7 @@ export const usePassportStore = create<State>()(
     {
       name: "akjol-passport-v1",
       storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true;
       },

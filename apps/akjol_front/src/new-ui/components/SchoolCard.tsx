@@ -24,7 +24,7 @@ export function SchoolCard({
   const country = findCountry(school.countryRef);
   return (
     <Link
-      href={`/new-ui/school/${school.id}`}
+      href={`/school/${school.id}`}
       className="block rounded-xl bg-white border border-black/5 hover:border-[#ee7768]/40 hover:shadow-md transition p-4"
     >
       <div className="flex items-start justify-between gap-3 mb-2">
