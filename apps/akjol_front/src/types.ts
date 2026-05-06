@@ -58,6 +58,8 @@ export type SchoolMeta = {
 export type Program = {
   id: string;
   countryRef: ISO2;
+  formationCode: string;
+  formationLabel: string;
   school: SchoolMeta;
   title: string;
   level: ProgramLevel;

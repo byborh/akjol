@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowRight, Compass, Globe2, Shield } from "lucide-react";
 import { PageContainer } from "../components/PageContainer";
 import { usePassportStore } from "../store/passport-store";
-import { useLivesStore } from "../store/lives-store";
+import { useParcoursStore } from "../store/parcours-store";
 import { useMounted } from "../hooks/useMounted";
 
 export default function LandingPage() {
@@ -20,7 +20,7 @@ export default function LandingPage() {
 function LandingInner() {
   const mounted = useMounted();
   const isComplete = usePassportStore((s) => s.isComplete());
-  const importLifeFromToken = useLivesStore((s) => s.importLifeFromToken);
+  const importFromToken = useParcoursStore((s) => s.importFromToken);
   const params = useSearchParams();
   const router = useRouter();
   const [imported, setImported] = useState<string | null>(null);
@@ -29,15 +29,15 @@ function LandingInner() {
   useEffect(() => {
     const token = params.get("import");
     if (token) {
-      const id = importLifeFromToken(token);
+      const id = importFromToken(token);
       if (id) {
-        setImported("Vie importée — ouvre le menu « Mes vies » pour la charger.");
+        router.replace(`/parcours/${id}`, { scroll: false });
       } else {
         setImported("Token invalide ou corrompu.");
+        router.replace("/", { scroll: false });
       }
-      router.replace("/", { scroll: false });
     }
-  }, [params, importLifeFromToken, router]);
+  }, [params, importFromToken, router]);
 
   return (
     <PageContainer className="pt-12">

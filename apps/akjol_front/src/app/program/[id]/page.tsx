@@ -23,13 +23,14 @@ import { PageContainer } from "../../../components/PageContainer";
 import { GaugeCircular } from "../../../components/GaugeCircular";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { TrajectoryBar } from "../../../components/TrajectoryBar";
-import { findProgram } from "../../../data/programs";
+import { findProgram, getProgramsByFormationCode } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
 import { findSchoolByProgram } from "../../../data/schools";
 import { useMounted } from "../../../hooks/useMounted";
+import type { Program } from "../../../types";
 
 const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
   parcoursup: { name: "Parcoursup", url: "https://www.parcoursup.gouv.fr" },
@@ -61,6 +62,11 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
     () => (program ? computeFeasibility(effective, program) : null),
     [program, effective],
   );
+
+  const otherSchoolsTeachingThisFormation = useMemo<Program[]>(() => {
+    if (!program) return [];
+    return getProgramsByFormationCode(program.formationCode).filter((p) => p.id !== program.id);
+  }, [program]);
 
   if (!mounted) return null;
   if (!program || !feasibility) return notFound();
@@ -225,6 +231,62 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
             </div>
             <p className="text-sm text-[#1a1d24]/70 mt-4 leading-relaxed">{program.description}</p>
           </Section>
+
+          <Section
+            title={`« ${program.formationLabel} » est aussi enseignée par${otherSchoolsTeachingThisFormation.length > 0 ? "" : "..."}`}
+            icon={<Building2 size={18} />}
+          >
+            {otherSchoolsTeachingThisFormation.length === 0 ? (
+              <p className="text-[12px] text-[#1a1d24]/55 leading-relaxed">
+                Pour l'instant, AkJol ne référence que <strong>{program.school.name}</strong> pour cette
+                formation. D'autres établissements la proposent probablement dans la vraie vie — on travaille à
+                les ajouter.
+              </p>
+            ) : (
+              <>
+                <p className="text-[12px] text-[#1a1d24]/60 mb-3 leading-relaxed">
+                  <strong className="text-[#1a1d24]">{otherSchoolsTeachingThisFormation.length}</strong>{" "}
+                  autre{otherSchoolsTeachingThisFormation.length > 1 ? "s" : ""} établissement
+                  {otherSchoolsTeachingThisFormation.length > 1 ? "s" : ""} référencé
+                  {otherSchoolsTeachingThisFormation.length > 1 ? "s" : ""} dans AkJol enseigne
+                  {otherSchoolsTeachingThisFormation.length > 1 ? "nt" : ""} la même formation. Compare avant
+                  de candidater — frais, ville, durée, taux d'admission peuvent différer.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {otherSchoolsTeachingThisFormation.map((sim) => {
+                    const c = findCountry(sim.countryRef);
+                    return (
+                      <Link
+                        key={sim.id}
+                        href={`/program/${sim.id}`}
+                        className="block rounded-lg border border-black/5 hover:border-[#ee7768]/40 bg-white px-3 py-2.5 transition"
+                      >
+                        <div className="font-medium text-[13px] text-[#1a1d24] truncate">
+                          {sim.school.name}
+                        </div>
+                        <div className="text-[11px] text-[#1a1d24]/55 mt-0.5 truncate">
+                          {c?.flag} {sim.school.city}
+                          {typeof sim.school.rating === "number"
+                            ? ` · ★ ${sim.school.rating.toFixed(1)}`
+                            : ""}
+                        </div>
+                        <div className="text-[10px] text-[#1a1d24]/45 mt-1 line-clamp-2">{sim.title}</div>
+                        <div
+                          className="text-[10px] text-[#1a1d24]/55 mt-1"
+                          style={{ fontFamily: "var(--font-mono)" }}
+                        >
+                          {sim.durationYears} an{sim.durationYears > 1 ? "s" : ""} ·{" "}
+                          {sim.costPerYear === 0
+                            ? "Gratuit"
+                            : `${sim.costPerYear.toLocaleString("fr-FR")} €/an`}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </Section>
         </div>
 
         <aside className="lg:sticky lg:top-20 self-start space-y-3">
@@ -280,7 +342,7 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
             href={`/school/${findSchoolByProgram(program)?.id ?? ""}`}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm border border-black/10 hover:border-[#ee7768] transition"
           >
-            <Building2 size={14} /> Visiter l'établissement
+            <Building2 size={14} /> Visiter {program.school.name}
           </Link>
           <div className="rounded-xl bg-white border border-black/5 p-4 text-[12px] text-[#1a1d24]/70 leading-relaxed">
             <strong className="text-[#1a1d24]">Honnêteté épistémique.</strong> La probabilité affichée est
