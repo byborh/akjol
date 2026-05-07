@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "explore": "Explorer",
+    "catalog": "Catalogue",
+    "passport": "Passeport",
+    "account": "Compte",
+    "login": "Se connecter"
+  },
+  "footer": {
+    "tagline": "Routeur d'études",
+    "version": "version",
+    "methodology": "Méthodologie",
+    "account": "Compte",
+    "github": "GitHub"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "open": "Ouvert",
+    "openWithStep": "Avec une étape",
+    "closed": "Fermé",
+    "uncovered": "Non couvert"
+  },
+  "explore": {
+    "title": "Tes possibilités",
+    "titleVirtual": "Suite possible",
+    "stats": "{open} ouverts · {amber} avec une étape · {closed} fermés",
+    "viewList": "Liste",
+    "viewGlobe": "Globe",
+    "filterAll": "Tous les pays",
+    "onlyOpen": "Ouverts uniquement",
+    "noResults": "Aucun programme avec ces filtres."
+  },
+  "country": {
+    "open": "Programmes ouverts directement",
+    "withStep": "Programmes avec une étape",
+    "closed": "Programmes fermés (avec raison)",
+    "visa": "Démarches visa pour toi",
+    "living": "Vivre en {country}",
+    "sources": "Sources & démarches officielles",
+    "back": "Retour au globe"
+  },
+  "locale": {
+    "switch": "Langue",
+    "fr": "Français",
+    "en": "English"
+  }
+}

@@ -1,18 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, GraduationCap, IdCard } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Compass, GraduationCap, IdCard, User } from "lucide-react";
 import { ParcoursMenu } from "./ParcoursMenu";
+import { useAuthStore } from "../store/auth-store";
 
 const NAV_ITEMS = [
-  { href: "/explore", label: "Explorer", icon: Compass },
-  { href: "/catalog", label: "Catalogue", icon: GraduationCap },
-  { href: "/passport", label: "Passeport", icon: IdCard },
+  { href: "/explore", labelKey: "explore" as const, icon: Compass },
+  { href: "/catalog", labelKey: "catalog" as const, icon: GraduationCap },
+  { href: "/passport", labelKey: "passport" as const, icon: IdCard },
 ];
 
 export function AppNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+  const user = useAuthStore((s) => s.user);
+  const refresh = useAuthStore((s) => s.refresh);
+  const fetched = useAuthStore((s) => s.fetched);
+
+  useEffect(() => {
+    if (!fetched) void refresh();
+  }, [fetched, refresh]);
   return (
     <header className="sticky top-0 z-30 bg-[#FAFAF7]/85 backdrop-blur-md border-b border-black/5">
       <div className="max-w-5xl mx-auto px-4 sm:px-5 h-14 flex items-center justify-between gap-3">
@@ -24,7 +35,7 @@ export function AppNav() {
           AkJol
         </Link>
         <nav className="flex items-center gap-1 sm:gap-3 text-sm">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href || (href !== "/" && pathname.startsWith(href));
             return (
               <Link
@@ -37,11 +48,23 @@ export function AppNav() {
                 }}
               >
                 <Icon size={14} />
-                <span className="hidden sm:inline">{label}</span>
+                <span className="hidden sm:inline">{t(labelKey)}</span>
               </Link>
             );
           })}
           <ParcoursMenu />
+          <Link
+            href="/account"
+            className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition text-sm"
+            style={{
+              color: pathname.startsWith("/account") ? "#ee7768" : "#1a1d24b3",
+              background: pathname.startsWith("/account") ? "#ee776812" : "transparent",
+            }}
+            title={user ? user.email : t("login")}
+          >
+            <User size={14} />
+            <span className="hidden sm:inline">{user ? user.name : t("account")}</span>
+          </Link>
         </nav>
       </div>
     </header>

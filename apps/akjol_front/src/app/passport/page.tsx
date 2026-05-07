@@ -5,9 +5,9 @@ import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { findCountry } from "../../data/countries";
-import { findProgram } from "../../data/programs";
 import { usePassportStore } from "../../store/passport-store";
 import { useMounted } from "../../hooks/useMounted";
+import { PlanTimeline } from "../../components/PlanTimeline";
 
 const TABS = ["Mon profil", "Mon plan", "Historique"] as const;
 type Tab = (typeof TABS)[number];
@@ -16,9 +16,7 @@ export default function PassportPage() {
   const mounted = useMounted();
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
-  const savedPlan = usePassportStore((s) => s.savedPlan);
   const reset = usePassportStore((s) => s.reset);
-  const toggleSaved = usePassportStore((s) => s.toggleSaved);
 
   const [tab, setTab] = useState<Tab>("Mon profil");
   const country = findCountry(passport.origin.country);
@@ -143,47 +141,7 @@ export default function PassportPage() {
           </div>
         ) : null}
 
-        {tab === "Mon plan" ? (
-          <div>
-            {savedPlan.length === 0 ? (
-              <p className="text-sm text-[#1a1d24]/60">
-                Aucun programme sauvegardé. Ajoute-en depuis une fiche programme.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {savedPlan.map((s) => {
-                  const program = findProgram(s.programId);
-                  if (!program) return null;
-                  return (
-                    <div
-                      key={s.programId}
-                      className="flex items-center gap-3 rounded-lg bg-white border border-black/5 px-4 py-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={`/program/${program.id}`}
-                          className="font-medium text-[#1a1d24] hover:text-[#ee7768] truncate block"
-                        >
-                          {program.title}
-                        </Link>
-                        <div className="text-xs text-[#1a1d24]/60">
-                          {program.school.name} · ajouté le {new Date(s.addedAt).toLocaleDateString("fr-FR")}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => toggleSaved(program.id)}
-                        className="text-[#7e2929] hover:bg-[#d9656510] rounded p-1.5"
-                        title="Retirer"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ) : null}
+        {tab === "Mon plan" ? <PlanTimeline /> : null}
 
         {tab === "Historique" ? (
           <p className="text-sm text-[#1a1d24]/60">

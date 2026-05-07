@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "explore": "Explore",
+    "catalog": "Catalog",
+    "passport": "Passport",
+    "account": "Account",
+    "login": "Sign in"
+  },
+  "footer": {
+    "tagline": "Education router",
+    "version": "version",
+    "methodology": "Methodology",
+    "account": "Account",
+    "github": "GitHub"
+  },
+  "common": {
+    "loading": "Loading…",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "open": "Open",
+    "openWithStep": "With a step",
+    "closed": "Closed",
+    "uncovered": "Not covered"
+  },
+  "explore": {
+    "title": "Your possibilities",
+    "titleVirtual": "Next possible step",
+    "stats": "{open} open · {amber} with a step · {closed} closed",
+    "viewList": "List",
+    "viewGlobe": "Globe",
+    "filterAll": "All countries",
+    "onlyOpen": "Only open",
+    "noResults": "No programs match these filters."
+  },
+  "country": {
+    "open": "Programs open directly",
+    "withStep": "Programs with a step",
+    "closed": "Closed programs (with reason)",
+    "visa": "Visa steps for you",
+    "living": "Living in {country}",
+    "sources": "Sources & official paperwork",
+    "back": "Back to globe"
+  },
+  "locale": {
+    "switch": "Language",
+    "fr": "Français",
+    "en": "English"
+  }
+}

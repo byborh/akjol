@@ -27,11 +27,13 @@ import { findProgram, getProgramsByFormationCode } from "../../../data/programs"
 import { findCountry } from "../../../data/countries";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
+import { usePlanStore } from "../../../store/plan-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
 import { findSchoolByProgram } from "../../../data/schools";
 import { useMounted } from "../../../hooks/useMounted";
 import { BudgetSummary } from "../../../components/BudgetSummary";
 import { VisaSection } from "../../../components/VisaSection";
+import { PlanBSection } from "../../../components/PlanBSection";
 import type { Program } from "../../../types";
 
 const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
@@ -50,6 +52,8 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
   const passport = usePassportStore((s) => s.passport);
   const savedPlan = usePassportStore((s) => s.savedPlan);
   const toggleSaved = usePassportStore((s) => s.toggleSaved);
+  const planAdd = usePlanStore((s) => s.add);
+  const planRemove = usePlanStore((s) => s.remove);
   const toggleCompare = usePassportStore((s) => s.toggleCompare);
   const comparator = usePassportStore((s) => s.comparator);
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
@@ -297,6 +301,8 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
             dest={program.countryRef}
             level={program.level}
           />
+
+          <PlanBSection program={program} passport={effective} />
         </div>
 
         <aside className="lg:sticky lg:top-20 self-start space-y-3">
@@ -319,7 +325,12 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
             </button>
           ) : null}
           <button
-            onClick={() => toggleSaved(program.id)}
+            onClick={() => {
+              const now = isSaved;
+              toggleSaved(program.id);
+              if (now) planRemove(program.id);
+              else planAdd(program);
+            }}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-sm border transition"
             style={{
               borderColor: isSaved ? "#a3cf91" : "#0000000d",
