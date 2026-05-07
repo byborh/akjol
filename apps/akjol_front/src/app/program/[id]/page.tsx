@@ -30,6 +30,8 @@ import { usePassportStore } from "../../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
 import { findSchoolByProgram } from "../../../data/schools";
 import { useMounted } from "../../../hooks/useMounted";
+import { BudgetSummary } from "../../../components/BudgetSummary";
+import { VisaSection } from "../../../components/VisaSection";
 import type { Program } from "../../../types";
 
 const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
@@ -287,6 +289,14 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
               </>
             )}
           </Section>
+
+          <BudgetSummary programs={[program]} passport={passport} />
+
+          <VisaSection
+            origin={passport.origin.country || "FR"}
+            dest={program.countryRef}
+            level={program.level}
+          />
         </div>
 
         <aside className="lg:sticky lg:top-20 self-start space-y-3">

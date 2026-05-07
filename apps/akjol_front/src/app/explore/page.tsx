@@ -2,11 +2,13 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Filter, Sparkles } from "lucide-react";
+import { Filter, Sparkles, List, Globe as GlobeIcon } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { ProgramCard } from "../../components/ProgramCard";
 import { TrajectoryBar } from "../../components/TrajectoryBar";
 import { FromToSearch } from "../../components/FromToSearch";
+import { Globe } from "../../components/Globe";
+import { JobTargetPanel } from "../../components/JobTargetPanel";
 import { PROGRAMS } from "../../data/programs";
 import { COUNTRIES } from "../../data/countries";
 import { computeFeasibility } from "../../engine/feasibility";
@@ -47,6 +49,7 @@ function ExploreInner() {
   const [onlyOpen, setOnlyOpen] = useState(false);
   const [country, setCountry] = useState<string>("");
   const [aimFilter, setAimFilter] = useState<string>("");
+  const [view, setView] = useState<"list" | "globe">("list");
 
   useEffect(() => {
     loadFromUrl({ from: searchParams.get("from"), via: searchParams.get("via") });
@@ -146,6 +149,30 @@ function ExploreInner() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center rounded-lg border border-black/5 bg-white p-0.5">
+              <button
+                onClick={() => setView("list")}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm transition"
+                style={{
+                  background: view === "list" ? "#ee776812" : "transparent",
+                  color: view === "list" ? "#ee7768" : "#1a1d24b3",
+                }}
+                aria-pressed={view === "list"}
+              >
+                <List size={14} /> Liste
+              </button>
+              <button
+                onClick={() => setView("globe")}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm transition"
+                style={{
+                  background: view === "globe" ? "#ee776812" : "transparent",
+                  color: view === "globe" ? "#ee7768" : "#1a1d24b3",
+                }}
+                aria-pressed={view === "globe"}
+              >
+                <GlobeIcon size={14} /> Globe
+              </button>
+            </div>
             <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-black/5 rounded-lg">
               <Filter size={14} className="text-[#1a1d24]/50" />
               <select
@@ -184,6 +211,10 @@ function ExploreInner() {
           />
         </div>
 
+        <div className="mb-5">
+          <JobTargetPanel />
+        </div>
+
         {isVirtualMode ? (
           <div className="mb-4 rounded-xl bg-[#ee776810] border border-[#ee7768]/20 px-4 py-3 text-[12px] text-[#a8463a] flex items-center gap-2">
             <Sparkles size={13} />
@@ -194,14 +225,23 @@ function ExploreInner() {
           </div>
         ) : null}
 
-        <div className="space-y-3">
-          {filtered.length === 0 ? (
-            <p className="text-sm text-[#1a1d24]/60">Aucun programme avec ces filtres.</p>
-          ) : null}
-          {filtered.map(({ program, feasibility }) => (
-            <ProgramCard key={program.id} program={program} feasibility={feasibility} />
-          ))}
-        </div>
+        {view === "globe" ? (
+          <div className="mb-6">
+            <Globe height={560} />
+            <p className="mt-3 text-[12px] text-[#1a1d24]/60">
+              Survole un pays pour voir ses stats. Clique pour ouvrir le détail.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.length === 0 ? (
+              <p className="text-sm text-[#1a1d24]/60">Aucun programme avec ces filtres.</p>
+            ) : null}
+            {filtered.map(({ program, feasibility }) => (
+              <ProgramCard key={program.id} program={program} feasibility={feasibility} />
+            ))}
+          </div>
+        )}
       </PageContainer>
     </>
   );
