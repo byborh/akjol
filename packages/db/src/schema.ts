@@ -135,6 +135,33 @@ export const programs = sqliteTable(
 );
 
 /**
+ * jobs : miroir du type Job front (apps/akjol_front/src/data/jobs.ts).
+ * Champs structurés (salary, regions, tasks, requiresDiplomas, matchKeywords)
+ * en JSON text — même logique que programs.
+ */
+export const jobs = sqliteTable(
+  "jobs",
+  {
+    id: text("id").primaryKey(),
+    code: text("code").notNull(),
+    label: text("label").notNull(),
+    riskAutomation: integer("risk_automation_x100").notNull().default(0), // 0..100
+    domains: text("domains").notNull().default("[]"),
+    salary: text("salary").notNull().default("[]"),
+    regionsTopHiring: text("regions_top_hiring").notNull().default("[]"),
+    dailyTasks: text("daily_tasks").notNull().default("[]"),
+    requiresDiplomas: text("requires_diplomas").notNull().default("[]"),
+    matchKeywords: text("match_keywords").notNull().default("[]"),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => ({
+    byCode: index("jobs_code_idx").on(t.code),
+  }),
+);
+
+/**
  * ingestion_runs : journal des exécutions du pipeline d'ingestion.
  * Permet de comparer un run au précédent (diff detection) et d'auditer.
  */
@@ -160,4 +187,6 @@ export type Formation = typeof formations.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type ProgramRow = typeof programs.$inferSelect;
 export type ProgramInsert = typeof programs.$inferInsert;
+export type JobRow = typeof jobs.$inferSelect;
+export type JobInsert = typeof jobs.$inferInsert;
 export type IngestionRun = typeof ingestionRuns.$inferSelect;

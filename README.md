@@ -30,9 +30,28 @@ akjol/
 
 ```bash
 pnpm install
-pnpm db:push       # crée le schéma SQLite
-pnpm dev           # lance akjol sur http://localhost:3000
+pnpm db:push                            # crée le schéma SQLite
+pnpm --filter akjol seed:fixtures       # charge les 24 programmes + 12 métiers de démo dans la DB
+pnpm dev                                # lance akjol sur http://localhost:3000
 ```
+
+> **Windows / better-sqlite3** — si `pnpm db:push` ou `seed:fixtures` plante avec
+> *"Could not locate the bindings file"*, il manque les Visual Studio Build Tools.
+> Installe `windows-build-tools` ou les **Build Tools for Visual Studio 2022** (workload
+> "Desktop development with C++"), puis `pnpm rebuild better-sqlite3 --force`.
+> En attendant, l'app continue de tourner : les routes API détectent l'absence de DB
+> et tombent automatiquement sur les fixtures bundle (zéro régression démo).
+
+## Pipeline d'ingestion (data réelle)
+
+ONISEP est implémenté ; Mon Master / UCAS / Common App sont stubs.
+
+```bash
+pnpm ingest:onisep                      # télécharge le CSV data.gouv.fr (~60k formations) → SQLite
+pnpm ingest onisep --limit 500          # smoke test
+```
+
+Voir [`packages/ingest/README.md`](packages/ingest/README.md) pour les détails.
 
 ## Documentation
 
