@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { Coins, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { findCountry } from "../../data/countries";
 import { usePassportStore } from "../../store/passport-store";
 import { useMounted } from "../../hooks/useMounted";
 import { PlanTimeline } from "../../components/PlanTimeline";
+import { scholarshipsForPassport, formatAmount } from "../../data/scholarships";
 
 const TABS = ["Mon profil", "Mon plan", "Historique"] as const;
 type Tab = (typeof TABS)[number];
@@ -20,6 +21,9 @@ export default function PassportPage() {
 
   const [tab, setTab] = useState<Tab>("Mon profil");
   const country = findCountry(passport.origin.country);
+  const matchingScholarships = mounted && passport.origin.country
+    ? scholarshipsForPassport(passport).filter((m) => m.isMatch).slice(0, 3)
+    : [];
 
   if (!mounted) return null;
   if (!isComplete) {
@@ -138,6 +142,32 @@ export default function PassportPage() {
                 <Trash2 size={14} /> Tout réinitialiser
               </button>
             </div>
+
+            {matchingScholarships.length > 0 ? (
+              <div className="sm:col-span-2 rounded-xl bg-[#fafff5] border border-[#a3cf91]/40 p-4">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h3 className="text-sm font-medium inline-flex items-center gap-2">
+                    <Sparkles size={14} className="text-[#3a6f2c]" /> Bourses pour toi
+                  </h3>
+                  <Link
+                    href="/bourses"
+                    className="text-[12px] text-[#3a6f2c] hover:underline font-medium"
+                  >
+                    Voir les {scholarshipsForPassport(passport).filter((m) => m.isMatch).length} bourses →
+                  </Link>
+                </div>
+                <ul className="space-y-1.5">
+                  {matchingScholarships.map(({ scholarship: s }) => (
+                    <li key={s.id} className="flex items-center gap-2 text-[12px]">
+                      <Coins size={11} className="text-[#3a6f2c] shrink-0" />
+                      <span className="font-medium text-[#1a1d24]">{s.shortName ?? s.name}</span>
+                      <span className="text-[#1a1d24]/60">·</span>
+                      <span className="font-mono text-[#1a1d24]/80">{formatAmount(s)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
