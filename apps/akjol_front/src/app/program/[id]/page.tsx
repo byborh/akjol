@@ -25,6 +25,7 @@ import { StatusBadge } from "../../../components/StatusBadge";
 import { TrajectoryBar } from "../../../components/TrajectoryBar";
 import { findProgram, getProgramsByFormationCode } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
+import { jobsForProgram } from "../../../data/jobs";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { usePlanStore } from "../../../store/plan-store";
@@ -206,14 +207,26 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
                   Métiers typiques
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {program.outcomesJobs.map((j) => (
-                    <span
-                      key={j}
-                      className="px-2.5 py-1 rounded-full bg-[#ee776815] text-[#a8463a] text-[12px]"
-                    >
-                      {j}
-                    </span>
-                  ))}
+                  {program.outcomesJobs.map((label) => {
+                    const matched = jobsForProgram([label])[0];
+                    return matched ? (
+                      <Link
+                        key={label}
+                        href={`/jobs/${matched.id}`}
+                        className="px-2.5 py-1 rounded-full bg-[#ee776815] text-[#a8463a] text-[12px] hover:bg-[#ee776830] transition inline-flex items-center gap-1"
+                        title={`Voir la fiche métier "${matched.label}"`}
+                      >
+                        {label} <ArrowRight size={10} />
+                      </Link>
+                    ) : (
+                      <span
+                        key={label}
+                        className="px-2.5 py-1 rounded-full bg-[#ee776815] text-[#a8463a] text-[12px]"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
               <div>

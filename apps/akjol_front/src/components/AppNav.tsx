@@ -4,13 +4,14 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Compass, GraduationCap, IdCard, User } from "lucide-react";
+import { Briefcase, Compass, GraduationCap, IdCard, User } from "lucide-react";
 import { ParcoursMenu } from "./ParcoursMenu";
 import { useAuthStore } from "../store/auth-store";
 
 const NAV_ITEMS = [
   { href: "/explore", labelKey: "explore" as const, icon: Compass },
   { href: "/catalog", labelKey: "catalog" as const, icon: GraduationCap },
+  { href: "/jobs", labelKey: "jobs" as const, icon: Briefcase },
   { href: "/passport", labelKey: "passport" as const, icon: IdCard },
 ];
 

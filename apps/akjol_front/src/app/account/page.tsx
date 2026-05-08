@@ -90,7 +90,8 @@ export default function AccountPage() {
 
       <h1 className="text-3xl font-medium tracking-tight">Mon compte</h1>
       <p className="text-sm text-[#1a1d24]/70 mt-1">
-        Connecte-toi pour synchroniser ton passeport entre appareils.
+        Session signée par cookie. Ton passeport reste stocké localement sur cet appareil
+        (la sync cross-device arrivera plus tard).
       </p>
 
       {!fetched ? (
@@ -158,9 +159,10 @@ export default function AccountPage() {
           </div>
 
           <div className="rounded-xl bg-[#fcf6e8] border border-[#e6c068]/30 p-4 text-[12px] text-[#8a5314]">
-            <strong>Sync multi-device en bêta.</strong> Pour l'instant ton passeport reste stocké
-            localement sur cet appareil. La synchronisation cross-device arrivera avec le backend
-            persistant.
+            <strong>Profil local pour l'instant.</strong> La session te connecte côté serveur,
+            mais ton passeport et tes parcours restent stockés sur cet appareil (localStorage).
+            La sync entre appareils arrivera avec la persistance compte côté DB — pas encore
+            livrée. Si tu changes de navigateur, tu repars avec un passeport vide.
           </div>
         </div>
       ) : (
