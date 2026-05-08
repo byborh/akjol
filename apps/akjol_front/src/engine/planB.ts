@@ -1,6 +1,7 @@
 import type { Passport, Program, ProgramLevel } from "../types";
 import { PROGRAMS } from "../data/programs";
 import { computeFeasibility } from "./feasibility";
+import type { EquivalenceEdge } from "../data/equivalences";
 
 export type FailureBranch = {
   trigger: string;
@@ -30,7 +31,12 @@ const SAME_LEVEL: Record<ProgramLevel, ProgramLevel[]> = {
   certif: ["certif"],
 };
 
-function similarPrograms(target: Program, passport: Passport, max = 3): Alternative[] {
+function similarPrograms(
+  target: Program,
+  passport: Passport,
+  max = 3,
+  edges?: EquivalenceEdge[],
+): Alternative[] {
   const wantedLevels = SAME_LEVEL[target.level] ?? [target.level];
   const candidates = PROGRAMS.filter(
     (p) =>
@@ -41,7 +47,7 @@ function similarPrograms(target: Program, passport: Passport, max = 3): Alternat
 
   const scored = candidates
     .map((p) => {
-      const f = computeFeasibility(passport, p);
+      const f = computeFeasibility(passport, p, edges);
       return { p, f };
     })
     .filter((x) => x.f.status !== "closed")
@@ -74,20 +80,24 @@ function rationale(target: Program, alt: Program): string {
   return "Domaine équivalent, candidature parallèle possible.";
 }
 
-export function planBFor(program: Program, passport: Passport): FailureBranch[] {
+export function planBFor(
+  program: Program,
+  passport: Passport,
+  edges?: EquivalenceEdge[],
+): FailureBranch[] {
   const branches: FailureBranch[] = [];
 
   if (program.minGrade) {
     branches.push({
       trigger: `Si tu n'atteins pas ${program.minGrade.value}/${program.minGrade.scaleMax} de moyenne`,
-      alternatives: similarPrograms(program, passport, 3),
+      alternatives: similarPrograms(program, passport, 3, edges),
     });
   }
 
   if (program.recommendsCertificate) {
     branches.push({
       trigger: `Si tu n'obtiens pas ${program.recommendsCertificate.code} ≥ ${program.recommendsCertificate.minScore}`,
-      alternatives: similarPrograms(program, passport, 2).filter((a) => {
+      alternatives: similarPrograms(program, passport, 2, edges).filter((a) => {
         const p = PROGRAMS.find((pp) => pp.id === a.programId);
         return !p?.recommendsCertificate;
       }),
@@ -97,13 +107,13 @@ export function planBFor(program: Program, passport: Passport): FailureBranch[] 
   if (program.optionalSteps && program.optionalSteps.length > 0) {
     branches.push({
       trigger: `Si tu n'es pas convoqué·e à : ${program.optionalSteps.join(", ").toLowerCase()}`,
-      alternatives: similarPrograms(program, passport, 2),
+      alternatives: similarPrograms(program, passport, 2, edges),
     });
   }
 
   branches.push({
     trigger: "Si tu n'es pas admis·e dans ce programme",
-    alternatives: similarPrograms(program, passport, 3),
+    alternatives: similarPrograms(program, passport, 3, edges),
   });
 
   return branches.filter((b) => b.alternatives.length > 0);

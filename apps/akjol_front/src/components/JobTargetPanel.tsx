@@ -6,6 +6,7 @@ import { JOBS, searchJobs } from "../data/jobs";
 import { reverseRoutes, type Trajectory } from "../engine/reverseRoutes";
 import { usePassportStore } from "../store/passport-store";
 import { useTrajectoryStore, applyTrajectory } from "../store/trajectory-store";
+import { useEquivalencesStore } from "../store/equivalences-store";
 import { findCountry } from "../data/countries";
 
 export function JobTargetPanel() {
@@ -14,6 +15,7 @@ export function JobTargetPanel() {
   const steps = useTrajectoryStore((s) => s.steps);
   const pushStep = useTrajectoryStore((s) => s.pushStepFromProgramId);
   const resetTrajectory = useTrajectoryStore((s) => s.resetTrajectory);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
@@ -26,8 +28,8 @@ export function JobTargetPanel() {
 
   const results = useMemo(() => searchJobs(query).slice(0, 8), [query]);
   const trajectories = useMemo(
-    () => (selected ? reverseRoutes(effective, selected) : []),
-    [selected, effective],
+    () => (selected ? reverseRoutes(effective, selected, equivEdges) : []),
+    [selected, effective, equivEdges],
   );
 
   const job = JOBS.find((j) => j.id === selected);

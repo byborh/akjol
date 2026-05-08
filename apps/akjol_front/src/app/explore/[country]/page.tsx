@@ -13,6 +13,7 @@ import { citiesByCountry, totalMonthly, avgMonthlyEurForCountry } from "../../..
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
+import { useEquivalencesStore } from "../../../store/equivalences-store";
 import type { FeasibilityStatus } from "../../../types";
 
 const STATUS_ORDER: Record<FeasibilityStatus, number> = {
@@ -30,6 +31,7 @@ export default function CountryDrawerPage({ params }: { params: Promise<{ countr
   const passport = usePassportStore((s) => s.passport);
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
     [passport, fromOverride, steps],
@@ -39,13 +41,13 @@ export default function CountryDrawerPage({ params }: { params: Promise<{ countr
 
   const enriched = useMemo(() => {
     return PROGRAMS.filter((p) => p.countryRef === iso2)
-      .map((p) => ({ program: p, feasibility: computeFeasibility(effective, p) }))
+      .map((p) => ({ program: p, feasibility: computeFeasibility(effective, p, equivEdges) }))
       .sort((a, b) => {
         const s = STATUS_ORDER[a.feasibility.status] - STATUS_ORDER[b.feasibility.status];
         if (s !== 0) return s;
         return b.feasibility.probability.value - a.feasibility.probability.value;
       });
-  }, [effective, iso2]);
+  }, [effective, iso2, equivEdges]);
 
   const stats = useMemo(() => {
     const open = enriched.filter((e) => e.feasibility.status === "open").length;

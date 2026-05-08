@@ -11,6 +11,7 @@ import { numericToAlpha2 } from "../data/isoNumeric";
 import { statsByCountry, colorForStatus, type CountryStats } from "../engine/countryFeasibility";
 import { usePassportStore } from "../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../store/trajectory-store";
+import { useEquivalencesStore } from "../store/equivalences-store";
 import { useRouter } from "next/navigation";
 
 const ReactGlobe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -31,12 +32,16 @@ export function Globe({ height = 560 }: { height?: number }) {
   const passport = usePassportStore((s) => s.passport);
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
     [passport, fromOverride, steps],
   );
 
-  const stats = useMemo(() => statsByCountry(effective, PROGRAMS), [effective]);
+  const stats = useMemo(
+    () => statsByCountry(effective, PROGRAMS, equivEdges),
+    [effective, equivEdges],
+  );
 
   useEffect(() => {
     let cancelled = false;

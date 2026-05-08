@@ -5,6 +5,8 @@ import type {
   Passport,
   Program,
 } from "../types";
+import { SEED_EQUIVALENCES, type EquivalenceEdge } from "../data/equivalences";
+import { bestMatchAmong, describeReach, type DiplomaReachability } from "./equivalences";
 
 const CEFR_RANK: Record<CEFR, number> = {
   A1: 1,
@@ -39,15 +41,64 @@ function languageMet(passport: Passport, program: Program): {
   };
 }
 
-function diplomaMet(passport: Passport, program: Program) {
+type DiplomaCheck = {
+  met: boolean;
+  detail: string;
+  /** Si match via passerelle (`requiresBridge`), on signale au moteur global
+   * qu'il doit dégrader le statut en "open_with_step". */
+  requiresBridge?: { description: string };
+  /** Métadonnée du chemin emprunté dans le graphe d'équivalences (debug + UI). */
+  reach?: DiplomaReachability;
+};
+
+function diplomaMet(
+  passport: Passport,
+  program: Program,
+  edges: EquivalenceEdge[],
+): DiplomaCheck {
   const cur = passport.currentDiploma;
   if (!cur) return { met: false, detail: "Aucun diplôme renseigné" };
-  const ok = program.acceptedDiplomas.includes(cur.code);
+
+  // 1. Match direct (chemin par défaut, ne touche pas au graphe).
+  if (program.acceptedDiplomas.includes(cur.code)) {
+    return {
+      met: true,
+      detail: `${cur.label} reconnu pour ce programme`,
+    };
+  }
+
+  // 2. Match transitif via le graphe d'équivalences éditable.
+  const best = bestMatchAmong(cur.code, program.acceptedDiplomas, edges);
+  if (!best) {
+    return {
+      met: false,
+      detail: `${cur.label} non listé dans les diplômes acceptés (et aucune équivalence connue)`,
+    };
+  }
+
+  const targetCode = best.code;
+  const desc = describeReach(best);
+
+  if (best.quality === "equivalent") {
+    return {
+      met: true,
+      detail: `${cur.label} ≡ ${targetCode} — ${desc}`,
+      reach: best,
+    };
+  }
+  if (best.quality === "acceptedAs") {
+    return {
+      met: true,
+      detail: `${cur.label} → ${targetCode} (${desc})`,
+      reach: best,
+    };
+  }
+  // requiresBridge : techniquement éligible, mais dégrade en open_with_step.
   return {
-    met: ok,
-    detail: ok
-      ? `${cur.label} reconnu pour ce programme`
-      : `${cur.label} non listé dans les diplômes acceptés`,
+    met: true,
+    detail: `${cur.label} accessible via passerelle vers ${targetCode}`,
+    requiresBridge: { description: `Passerelle ${best.path.join(" → ")}` },
+    reach: best,
   };
 }
 
@@ -109,11 +160,15 @@ function workStudyMet(passport: Passport, program: Program) {
   };
 }
 
-export function computeFeasibility(passport: Passport, program: Program): FeasibilityResult {
+export function computeFeasibility(
+  passport: Passport,
+  program: Program,
+  edges: EquivalenceEdge[] = SEED_EQUIVALENCES,
+): FeasibilityResult {
   const conditionsMet: Condition[] = [];
   const conditionsUnmet: Condition[] = [];
 
-  const dip = diplomaMet(passport, program);
+  const dip = diplomaMet(passport, program, edges);
   (dip.met ? conditionsMet : conditionsUnmet).push({
     label: dip.met ? "Diplôme reconnu" : "Diplôme non reconnu",
     met: dip.met,
@@ -210,11 +265,17 @@ export function computeFeasibility(passport: Passport, program: Program): Feasib
   if (!dip.met) {
     status = "closed";
     blockers.push({ label: "Diplôme actuel non reconnu pour ce programme" });
+  } else if (dip.requiresBridge) {
+    // Diplôme reconnu mais via passerelle (ex: BTS → L3 sur dossier).
+    status = "open_with_step";
+    missingStep = dip.requiresBridge.description;
   }
   if (!lang.met) {
     if (status !== "closed") {
       status = "open_with_step";
-      missingStep = `Atteindre ${program.language.code.toUpperCase()} ${lang.needed}`;
+      missingStep = missingStep
+        ? `${missingStep} · Atteindre ${program.language.code.toUpperCase()} ${lang.needed}`
+        : `Atteindre ${program.language.code.toUpperCase()} ${lang.needed}`;
     } else {
       blockers.push({ label: `Langue ${program.language.code.toUpperCase()} insuffisante` });
     }

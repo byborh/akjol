@@ -2,6 +2,7 @@ import type { Passport, Program } from "../types";
 import { PROGRAMS } from "../data/programs";
 import { JOBS, type Job } from "../data/jobs";
 import { computeFeasibility } from "./feasibility";
+import type { EquivalenceEdge } from "../data/equivalences";
 
 export type RouteStep = {
   programId: string;
@@ -51,7 +52,11 @@ function virtualPassportAt(passport: Passport, lastDiplomaCode: string, lastCoun
   };
 }
 
-export function reverseRoutes(passport: Passport, jobId: string): Trajectory[] {
+export function reverseRoutes(
+  passport: Passport,
+  jobId: string,
+  edges?: EquivalenceEdge[],
+): Trajectory[] {
   const target = JOBS.find((j) => j.id === jobId);
   if (!target) return [];
   const startCode = passport.currentDiploma?.code;
@@ -73,7 +78,7 @@ export function reverseRoutes(passport: Passport, jobId: string): Trajectory[] {
       const virtPassport = chain.length === 0
         ? passport
         : virtualPassportAt(passport, fromCode, fromCountry);
-      const f = computeFeasibility(virtPassport, p);
+      const f = computeFeasibility(virtPassport, p, edges);
       if (f.status === "closed") continue;
       const step: RouteStep = {
         programId: p.id,

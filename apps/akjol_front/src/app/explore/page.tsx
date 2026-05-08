@@ -14,6 +14,7 @@ import { COUNTRIES } from "../../data/countries";
 import { computeFeasibility } from "../../engine/feasibility";
 import { usePassportStore } from "../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
+import { useEquivalencesStore } from "../../store/equivalences-store";
 import { useMounted } from "../../hooks/useMounted";
 import type { FeasibilityStatus } from "../../types";
 
@@ -45,6 +46,7 @@ function ExploreInner() {
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
   const loadFromUrl = useTrajectoryStore((s) => s.loadFromUrl);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const [onlyOpen, setOnlyOpen] = useState(false);
   const [country, setCountry] = useState<string>("");
@@ -85,13 +87,13 @@ function ExploreInner() {
   const enriched = useMemo(() => {
     const visitedIds = new Set(steps.map((s) => s.programId));
     return PROGRAMS.filter((p) => !visitedIds.has(p.id))
-      .map((p) => ({ program: p, feasibility: computeFeasibility(effective, p) }))
+      .map((p) => ({ program: p, feasibility: computeFeasibility(effective, p, equivEdges) }))
       .sort((a, b) => {
         const s = STATUS_ORDER[a.feasibility.status] - STATUS_ORDER[b.feasibility.status];
         if (s !== 0) return s;
         return b.feasibility.probability.value - a.feasibility.probability.value;
       });
-  }, [effective, steps]);
+  }, [effective, steps, equivEdges]);
 
   const filtered = useMemo(() => {
     const aim = aimFilter.trim().toLowerCase();

@@ -15,7 +15,8 @@ import {
   type EdgeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Trash2, RotateCcw, History, Filter } from "lucide-react";
+import Link from "next/link";
+import { Trash2, RotateCcw, History, Filter, Sparkles, ExternalLink } from "lucide-react";
 import { DIPLOMAS } from "../../../data/diplomas";
 import { COUNTRIES } from "../../../data/countries";
 import {
@@ -137,6 +138,23 @@ export default function AdminGraphPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem-2rem)]">
+      <div className="px-4 py-2 border-b border-[#a3cf91]/30 bg-[#fafff5] text-[12px] text-[#3a6f2c] flex items-center gap-2 flex-wrap">
+        <Sparkles size={12} className="shrink-0" />
+        <span>
+          <strong>Tes éditions affectent maintenant le moteur.</strong> Crée une arête{" "}
+          <code>equivalent</code> ou <code>acceptedAs</code> entre deux diplômes et les programmes
+          dont les <code>acceptedDiplomas</code> contiennent la cible deviennent ouverts pour qui
+          tient le diplôme source.
+        </span>
+        <Link
+          href="/explore"
+          target="_blank"
+          rel="noreferrer"
+          className="ml-auto inline-flex items-center gap-1 font-medium hover:underline"
+        >
+          Voir l'effet sur /explore <ExternalLink size={11} />
+        </Link>
+      </div>
       <div className="px-4 py-3 border-b border-black/5 bg-white flex flex-wrap items-center gap-2">
         <h1 className="text-lg font-medium tracking-tight mr-3">Graphe d'équivalences</h1>
 

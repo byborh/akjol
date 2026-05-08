@@ -14,6 +14,8 @@ import { getAllSchools, getUniqueCities } from "../../data/schools";
 import { computeFeasibility } from "../../engine/feasibility";
 import { usePassportStore } from "../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
+import { useEquivalencesStore } from "../../store/equivalences-store";
+import type { EquivalenceEdge } from "../../data/equivalences";
 import { useMounted } from "../../hooks/useMounted";
 import type { Program, ProgramLevel } from "../../types";
 
@@ -62,6 +64,7 @@ function CatalogInner() {
   const isComplete = usePassportStore((s) => s.isComplete());
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const [view, setView] = useState<ViewMode>("formations");
   const [schoolDisplay, setSchoolDisplay] = useState<SchoolDisplayMode>("list");
@@ -252,7 +255,7 @@ function CatalogInner() {
             <p className="text-sm text-[#1a1d24]/60">Aucune formation avec ces filtres.</p>
           ) : null}
           {filteredFormations.map((p) => (
-            <CatalogProgramCard key={p.id} program={p} effective={effective} />
+            <CatalogProgramCard key={p.id} program={p} effective={effective} edges={equivEdges} />
           ))}
         </div>
       ) : (
@@ -296,7 +299,7 @@ function CatalogInner() {
                   ? Object.fromEntries(
                       filteredSchools.map((s) => [
                         s.id,
-                        s.programs.filter((p) => computeFeasibility(effective, p).status === "open").length,
+                        s.programs.filter((p) => computeFeasibility(effective, p, equivEdges).status === "open").length,
                       ]),
                     )
                   : {}
@@ -309,7 +312,7 @@ function CatalogInner() {
               ) : null}
               {filteredSchools.map((s) => {
                 const matchCount = effective
-                  ? s.programs.filter((p) => computeFeasibility(effective, p).status === "open").length
+                  ? s.programs.filter((p) => computeFeasibility(effective, p, equivEdges).status === "open").length
                   : 0;
                 return <SchoolCard key={s.id} school={s} matchCount={matchCount} />;
               })}
@@ -324,11 +327,13 @@ function CatalogInner() {
 function CatalogProgramCard({
   program,
   effective,
+  edges,
 }: {
   program: Program;
   effective: ReturnType<typeof applyTrajectory> | null;
+  edges: EquivalenceEdge[];
 }) {
-  const feasibility = effective ? computeFeasibility(effective, program) : null;
+  const feasibility = effective ? computeFeasibility(effective, program, edges) : null;
   return (
     <Link
       href={`/program/${program.id}`}

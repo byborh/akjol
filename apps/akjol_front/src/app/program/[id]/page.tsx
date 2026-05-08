@@ -30,6 +30,7 @@ import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { usePlanStore } from "../../../store/plan-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
+import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { findSchoolByProgram } from "../../../data/schools";
 import { useMounted } from "../../../hooks/useMounted";
 import { BudgetSummary } from "../../../components/BudgetSummary";
@@ -60,14 +61,15 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
   const pushStep = useTrajectoryStore((s) => s.pushStepFromProgramId);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
     [passport, fromOverride, steps],
   );
   const feasibility = useMemo(
-    () => (program ? computeFeasibility(effective, program) : null),
-    [program, effective],
+    () => (program ? computeFeasibility(effective, program, equivEdges) : null),
+    [program, effective, equivEdges],
   );
 
   const otherSchoolsTeachingThisFormation = useMemo<Program[]>(() => {

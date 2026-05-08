@@ -1,5 +1,6 @@
 import type { Passport, FeasibilityStatus, Program } from "../types";
 import { computeFeasibility } from "./feasibility";
+import type { EquivalenceEdge } from "../data/equivalences";
 
 export type CountryStats = {
   best: FeasibilityStatus | "uncovered";
@@ -19,6 +20,7 @@ const RANK: Record<FeasibilityStatus, number> = {
 export function statsByCountry(
   passport: Passport,
   programs: Program[],
+  edges?: EquivalenceEdge[],
 ): Map<string, CountryStats> {
   const out = new Map<string, CountryStats>();
   for (const p of programs) {
@@ -29,7 +31,7 @@ export function statsByCountry(
       closed: 0,
       total: 0,
     };
-    const f = computeFeasibility(passport, p);
+    const f = computeFeasibility(passport, p, edges);
     cur.total++;
     if (f.status === "open") cur.open++;
     else if (f.status === "open_with_step") cur.amber++;

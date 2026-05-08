@@ -20,6 +20,7 @@ import { findCountry } from "../../../data/countries";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
+import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { useMounted } from "../../../hooks/useMounted";
 import { GitCompare } from "lucide-react";
 
@@ -42,6 +43,7 @@ export default function SchoolPage({ params }: { params: Promise<{ id: string }>
   const toggleCompareSchool = usePassportStore((s) => s.toggleCompareSchool);
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const effective = useMemo(
     () => (isComplete ? applyTrajectory(passport, { fromOverride, steps }) : null),
@@ -54,8 +56,8 @@ export default function SchoolPage({ params }: { params: Promise<{ id: string }>
   const country = findCountry(school.countryRef);
   const stats = effective
     ? {
-        open: school.programs.filter((p) => computeFeasibility(effective, p).status === "open").length,
-        ambre: school.programs.filter((p) => computeFeasibility(effective, p).status === "open_with_step").length,
+        open: school.programs.filter((p) => computeFeasibility(effective, p, equivEdges).status === "open").length,
+        ambre: school.programs.filter((p) => computeFeasibility(effective, p, equivEdges).status === "open_with_step").length,
       }
     : null;
 
@@ -155,7 +157,7 @@ export default function SchoolPage({ params }: { params: Promise<{ id: string }>
       <h2 className="text-xl font-medium tracking-tight mb-3">Formations proposées</h2>
       <div className="space-y-3">
         {school.programs.map((p) => {
-          const fz = effective ? computeFeasibility(effective, p) : null;
+          const fz = effective ? computeFeasibility(effective, p, equivEdges) : null;
           return (
             <Link
               key={p.id}

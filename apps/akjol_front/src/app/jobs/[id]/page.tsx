@@ -22,6 +22,7 @@ import { findCountry } from "../../../data/countries";
 import { reverseRoutes, type Trajectory } from "../../../engine/reverseRoutes";
 import { usePassportStore } from "../../../store/passport-store";
 import { useTrajectoryStore, applyTrajectory } from "../../../store/trajectory-store";
+import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { useMounted } from "../../../hooks/useMounted";
 
 const SAFE_AUTOMATION = 0.2;
@@ -55,6 +56,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   const isComplete = usePassportStore((s) => s.isComplete());
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const effective = useMemo(
     () => (mounted && isComplete ? applyTrajectory(passport, { fromOverride, steps }) : null),
@@ -62,8 +64,8 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   );
 
   const trajectories = useMemo<Trajectory[]>(
-    () => (effective && job ? reverseRoutes(effective, job.id) : []),
-    [effective, job],
+    () => (effective && job ? reverseRoutes(effective, job.id, equivEdges) : []),
+    [effective, job, equivEdges],
   );
 
   const programsLeadingHere = useMemo(() => {

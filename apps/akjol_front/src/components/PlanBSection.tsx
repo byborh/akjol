@@ -5,9 +5,11 @@ import Link from "next/link";
 import type { Program, Passport } from "../types";
 import { planBFor } from "../engine/planB";
 import { findCountry } from "../data/countries";
+import { useEquivalencesStore } from "../store/equivalences-store";
 
 export function PlanBSection({ program, passport }: { program: Program; passport: Passport }) {
-  const branches = planBFor(program, passport);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
+  const branches = planBFor(program, passport, equivEdges);
   if (branches.length === 0) return null;
 
   return (

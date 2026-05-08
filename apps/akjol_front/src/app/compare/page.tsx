@@ -12,6 +12,7 @@ import { findCountry } from "../../data/countries";
 import { computeFeasibility } from "../../engine/feasibility";
 import { usePassportStore } from "../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
+import { useEquivalencesStore } from "../../store/equivalences-store";
 import { useMounted } from "../../hooks/useMounted";
 
 export default function ComparePage() {
@@ -24,6 +25,7 @@ export default function ComparePage() {
   const isComplete = usePassportStore((s) => s.isComplete());
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
+  const equivEdges = useEquivalencesStore((s) => s.edges);
 
   const effective = useMemo(
     () => (isComplete ? applyTrajectory(passport, { fromOverride, steps }) : null),
@@ -71,7 +73,7 @@ export default function ComparePage() {
           <h2 className="text-lg font-medium tracking-tight mb-3 inline-flex items-center gap-2">
             <GraduationCap size={18} /> Formations ({programItems.length})
           </h2>
-          <ProgramComparison items={programItems} effective={effective} onRemove={togglePr} />
+          <ProgramComparison items={programItems} effective={effective} edges={equivEdges} onRemove={togglePr} />
         </section>
       ) : null}
 
@@ -80,7 +82,7 @@ export default function ComparePage() {
           <h2 className="text-lg font-medium tracking-tight mb-3 inline-flex items-center gap-2">
             <Building2 size={18} /> Établissements ({schoolItems.length})
           </h2>
-          <SchoolComparison items={schoolItems} effective={effective} onRemove={togglSc} />
+          <SchoolComparison items={schoolItems} effective={effective} edges={equivEdges} onRemove={togglSc} />
         </section>
       ) : null}
     </PageContainer>
@@ -90,13 +92,15 @@ export default function ComparePage() {
 function ProgramComparison({
   items,
   effective,
+  edges,
   onRemove,
 }: {
   items: NonNullable<ReturnType<typeof findProgram>>[];
   effective: ReturnType<typeof applyTrajectory> | null;
+  edges: ReturnType<typeof useEquivalencesStore.getState>["edges"];
   onRemove: (id: string) => void;
 }) {
-  const fzs = items.map((p) => (effective ? computeFeasibility(effective, p) : null));
+  const fzs = items.map((p) => (effective ? computeFeasibility(effective, p, edges) : null));
 
   const probValues = fzs.map((f) => f?.probability.value ?? null);
   const bestProb = Math.max(...probValues.filter((v): v is number => v != null), -Infinity);
@@ -248,10 +252,12 @@ function ProgramComparison({
 function SchoolComparison({
   items,
   effective,
+  edges,
   onRemove,
 }: {
   items: NonNullable<ReturnType<typeof findSchool>>[];
   effective: ReturnType<typeof applyTrajectory> | null;
+  edges: ReturnType<typeof useEquivalencesStore.getState>["edges"];
   onRemove: (id: string) => void;
 }) {
   const ratings = items.map((s) => s.rating ?? 0);
@@ -259,7 +265,7 @@ function SchoolComparison({
   const programCounts = items.map((s) => s.programs.length);
   const maxPrograms = Math.max(...programCounts);
   const matchCounts = items.map((s) =>
-    effective ? s.programs.filter((p) => computeFeasibility(effective, p).status === "open").length : 0,
+    effective ? s.programs.filter((p) => computeFeasibility(effective, p, edges).status === "open").length : 0,
   );
   const maxMatch = Math.max(...matchCounts);
 
