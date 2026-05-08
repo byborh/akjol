@@ -30,6 +30,8 @@ import { useMounted } from "../../../hooks/useMounted";
 import { findProgram } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
 import { findSchoolByProgram } from "../../../data/schools";
+import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
+import { usePassportStore } from "../../../store/passport-store";
 
 const EMOJIS = ["🚀", "🎓", "🌍", "🧠", "⚙️", "🩺", "🎨", "💼", "🔭", "🌱"];
 
@@ -47,6 +49,7 @@ export default function ParcoursDetailPage({ params }: { params: Promise<{ id: s
   const activeId = useParcoursStore((s) => s.activeParcoursId);
 
   const setFromOverride = useTrajectoryStore((s) => s.setFromOverride);
+  const passport = usePassportStore((s) => s.passport);
 
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -354,6 +357,23 @@ export default function ParcoursDetailPage({ params }: { params: Promise<{ id: s
             Retirer
           </button>
         </div>
+      ) : null}
+
+      {parcours.steps.length > 0 ? (
+        <section className="mb-6">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <h2 className="text-lg font-medium tracking-tight">Aperçu visuel du chemin</h2>
+            <span className="text-[11px] text-[#1a1d24]/55">
+              C'est exactement ce que « Charger ce parcours » va appliquer sur ton passeport.
+            </span>
+          </div>
+          <TrajectoryFlow
+            passport={passport}
+            fromOverride={parcours.fromOverride}
+            steps={parcours.steps}
+            height={240}
+          />
+        </section>
       ) : null}
 
       <h2 className="text-lg font-medium tracking-tight mb-3">Étapes</h2>

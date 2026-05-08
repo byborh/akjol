@@ -8,7 +8,7 @@ import { ProgramCard } from "../../components/ProgramCard";
 import { TrajectoryBar } from "../../components/TrajectoryBar";
 import { FromToSearch } from "../../components/FromToSearch";
 import { Globe } from "../../components/Globe";
-import { JobTargetPanel } from "../../components/JobTargetPanel";
+import { TrajectoryFlow } from "../../components/TrajectoryFlow";
 import { PROGRAMS } from "../../data/programs";
 import { COUNTRIES } from "../../data/countries";
 import { computeFeasibility } from "../../engine/feasibility";
@@ -224,18 +224,27 @@ function ExploreInner() {
           />
         </div>
 
-        <div className="mb-5">
-          <JobTargetPanel />
-        </div>
-
         {isVirtualMode ? (
-          <div className="mb-4 rounded-xl bg-[#ee776810] border border-[#ee7768]/20 px-4 py-3 text-[12px] text-[#a8463a] flex items-center gap-2">
-            <Sparkles size={13} />
-            <span>
-              <strong>Mode exploration virtuelle.</strong> Ton passeport réel n'est pas modifié. Clique « Continuer
-              depuis ici » sur une carte pour ajouter une étape, ou clique une chip dans la barre pour remonter.
-            </span>
-          </div>
+          <>
+            <div className="mb-3 rounded-xl bg-[#ee776810] border border-[#ee7768]/20 px-4 py-3 text-[12px] text-[#a8463a] flex items-center gap-2">
+              <Sparkles size={13} />
+              <span>
+                <strong>Mode exploration virtuelle.</strong> Ton passeport réel n'est pas modifié.
+                Clique « Continuer depuis ici » sur une carte pour ajouter une étape, ou clique une
+                chip dans la barre pour remonter.
+              </span>
+            </div>
+            {steps.length > 0 ? (
+              <div className="mb-5">
+                <TrajectoryFlow
+                  passport={passport}
+                  fromOverride={fromOverride}
+                  steps={steps}
+                  height={210}
+                />
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {view === "globe" ? (

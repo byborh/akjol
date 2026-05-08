@@ -128,13 +128,6 @@ export default function SchoolPage({ params }: { params: Promise<{ id: string }>
             <GitCompare size={12} />
             {compareSchools.includes(school.id) ? "Dans le comparateur" : "Comparer cet établissement"}
           </button>
-          <button
-            disabled
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-sm text-white/40 cursor-not-allowed"
-            title="Bientôt — demander une visite ou un échange avec un étudiant"
-          >
-            Demander une visite (bientôt)
-          </button>
         </div>
       </div>
 

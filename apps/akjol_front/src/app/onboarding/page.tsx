@@ -75,18 +75,51 @@ export default function OnboardingPage() {
     });
   }
 
+  function loadLanaPreset() {
+    setDraft({
+      origin: {
+        country: "MY",
+        languages: [
+          { code: "ms", level: "C2" },
+          { code: "en", level: "C1" },
+          { code: "fr", level: "B1" },
+        ],
+      },
+      currentDiploma: {
+        countryRef: "MY",
+        code: "STPM",
+        label: "Sijil Tinggi Persekolahan Malaysia",
+        status: "in_progress",
+        yearExpected: 2026,
+        grade: { value: 3.6, scaleMax: 4 },
+      },
+      certificates: [],
+      constraints: { maxBudgetPerYear: 25000, needsScholarship: true },
+      aspiration: { domains: ["Santé", "Sciences"], jobs: [], openToSurprise: false },
+    });
+  }
+
   return (
     <PageContainer className="max-w-xl pt-6">
       <StepBar current={step} total={TOTAL_STEPS} />
-      <div className="mt-2 flex items-center justify-between text-xs">
+      <div className="mt-2 flex items-center justify-between text-xs gap-3">
         <span className="text-[#1a1d24]/50">Étape {step} sur {TOTAL_STEPS}</span>
         {step === 1 ? (
-          <button
-            onClick={loadLeaPreset}
-            className="inline-flex items-center gap-1 text-[#ee7768] hover:underline font-medium"
-          >
-            <Sparkles size={12} /> Pré-remplir : cas Léa
-          </button>
+          <div className="inline-flex items-center gap-3">
+            <span className="text-[#1a1d24]/40">Démo :</span>
+            <button
+              onClick={loadLeaPreset}
+              className="inline-flex items-center gap-1 text-[#ee7768] hover:underline font-medium"
+            >
+              <Sparkles size={12} /> 🇫🇷 Léa
+            </button>
+            <button
+              onClick={loadLanaPreset}
+              className="inline-flex items-center gap-1 text-[#ee7768] hover:underline font-medium"
+            >
+              <Sparkles size={12} /> 🇲🇾 Lana
+            </button>
+          </div>
         ) : null}
       </div>
 

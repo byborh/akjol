@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Coins, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Bookmark, Coins, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { findCountry } from "../../data/countries";
 import { usePassportStore } from "../../store/passport-store";
+import { useParcoursStore } from "../../store/parcours-store";
 import { useMounted } from "../../hooks/useMounted";
 import { PlanTimeline } from "../../components/PlanTimeline";
 import { scholarshipsForPassport, formatAmount } from "../../data/scholarships";
 
-const TABS = ["Mon profil", "Mon plan", "Historique"] as const;
+const TABS = ["Mon profil", "Mon plan", "Mes parcours"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function PassportPage() {
@@ -173,11 +174,7 @@ export default function PassportPage() {
 
         {tab === "Mon plan" ? <PlanTimeline /> : null}
 
-        {tab === "Historique" ? (
-          <p className="text-sm text-[#1a1d24]/60">
-            Bientôt : recherches passées, comparaisons sauvegardées, parcours explorés.
-          </p>
-        ) : null}
+        {tab === "Mes parcours" ? <ParcoursList /> : null}
       </div>
     </PageContainer>
   );
@@ -190,6 +187,63 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </div>
       <div className="text-[#1a1d24]">{children}</div>
+    </div>
+  );
+}
+
+function ParcoursList() {
+  const parcours = useParcoursStore((s) => s.parcours);
+  const remove = useParcoursStore((s) => s.deleteParcours);
+
+  if (parcours.length === 0) {
+    return (
+      <div className="rounded-xl bg-white border border-black/5 p-6 text-center">
+        <Bookmark size={20} className="mx-auto text-[#1a1d24]/40 mb-2" />
+        <h3 className="font-medium text-[#1a1d24]">Aucun parcours sauvegardé</h3>
+        <p className="text-sm text-[#1a1d24]/60 mt-1">
+          Sur <Link href="/explore" className="text-[#ee7768] hover:underline">/explore</Link>, empile
+          des étapes via « Continuer depuis ici » puis sauve la trajectoire dans « Mes parcours »
+          (icône en haut à droite).
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {parcours.map((p) => (
+        <Link
+          key={p.id}
+          href={`/parcours/${p.id}`}
+          className="block rounded-xl bg-white border border-black/5 hover:border-[#ee7768]/40 hover:shadow-md transition p-4 group"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-xl shrink-0">{p.emoji ?? "🎯"}</span>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-[#1a1d24] group-hover:text-[#ee7768] transition">
+                {p.name}
+              </h3>
+              <div className="text-[11px] text-[#1a1d24]/55 mt-0.5">
+                {p.steps.length} étape{p.steps.length > 1 ? "s" : ""} ·{" "}
+                {new Date(p.updatedAt).toLocaleDateString("fr-FR")}
+              </div>
+              {p.note ? (
+                <p className="text-[12px] text-[#1a1d24]/70 mt-1 line-clamp-2">{p.note}</p>
+              ) : null}
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirm(`Supprimer le parcours "${p.name}" ?`)) remove(p.id);
+              }}
+              className="text-[#1a1d24]/30 hover:text-[#7e2929] transition shrink-0"
+              title="Supprimer ce parcours"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }

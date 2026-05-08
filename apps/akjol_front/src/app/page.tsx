@@ -48,7 +48,7 @@ function LandingInner() {
       ) : null}
       <section className="max-w-3xl">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ee7768]/10 text-[#a8463a] text-xs font-medium mb-6">
-          <Compass size={13} /> Phase 0 — passeport + cas Léa (FR)
+          <Compass size={13} /> Preview — France · UK · Allemagne · Malaisie · États-Unis
         </div>
         <h1
           className="text-[2.6rem] sm:text-5xl leading-[1.05] font-medium text-[#1a1d24] tracking-tight"
@@ -97,23 +97,44 @@ function LandingInner() {
         />
       </section>
 
-      <section className="mt-16 rounded-2xl border border-black/5 bg-white p-6">
-        <div className="text-[11px] uppercase tracking-wider text-[#1a1d24]/40 font-medium mb-2">
-          Cas test inclus dans cette preview
+      <section className="mt-16">
+        <div className="text-[11px] uppercase tracking-wider text-[#1a1d24]/40 font-medium mb-3">
+          Cas tests inclus dans cette preview
         </div>
-        <div className="text-[#1a1d24] font-medium">
-          Léa — France, BTS SIO 2A (en cours)
+        <div className="grid sm:grid-cols-2 gap-3">
+          <article className="rounded-2xl border border-black/5 bg-white p-5">
+            <div className="text-[#1a1d24] font-medium inline-flex items-center gap-2">
+              <span>🇫🇷</span> Léa — France, BTS SIO 2A
+            </div>
+            <p className="text-sm text-[#1a1d24]/70 mt-2 leading-relaxed">
+              Veut savoir ce qu'elle peut faire après son BTS. AkJol lui montre Licence pro réseau,
+              école d'ingé via ATS, master via L3, bachelor en alternance — avec conditions et
+              probabilités.
+            </p>
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-1 mt-3 text-[#ee7768] hover:underline text-sm font-medium"
+            >
+              Tester en tant que Léa <ArrowRight size={14} />
+            </Link>
+          </article>
+          <article className="rounded-2xl border border-black/5 bg-white p-5">
+            <div className="text-[#1a1d24] font-medium inline-flex items-center gap-2">
+              <span>🇲🇾</span> Lana — Malaisie, STPM en cours
+            </div>
+            <p className="text-sm text-[#1a1d24]/70 mt-2 leading-relaxed">
+              Veut faire médecine ou ingé à l'international. AkJol calcule les corridors FR/UK/SG,
+              les visa, le coût total et les bourses qui réduisent la facture (Eiffel, Chevening,
+              Erasmus Mundus).
+            </p>
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-1 mt-3 text-[#ee7768] hover:underline text-sm font-medium"
+            >
+              Tester en tant que Lana <ArrowRight size={14} />
+            </Link>
+          </article>
         </div>
-        <p className="text-sm text-[#1a1d24]/70 mt-1">
-          Léa veut savoir ce qu'elle peut faire après son BTS. AkJol lui montre Licence pro réseau, école d'ingé via
-          ATS, master via L3, et bachelor en alternance — chacun avec conditions, suppositions et procédure.
-        </p>
-        <Link
-          href="/onboarding"
-          className="inline-flex items-center gap-1 mt-4 text-[#ee7768] hover:underline text-sm font-medium"
-        >
-          Tester en tant que Léa <ArrowRight size={14} />
-        </Link>
       </section>
     </PageContainer>
   );
