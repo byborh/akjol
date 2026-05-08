@@ -1,0 +1,53 @@
+name: ingest
+
+on:
+  schedule:
+    # Quotidien à 03:30 UTC (off-peak FR/UK).
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Source à ingérer (onisep | mon-master | ucas | common-app | all)"
+        required: true
+        default: "onisep"
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply DB migrations
+        run: pnpm db:migrate
+
+      - name: Run ingestion
+        env:
+          AKJOL_DB: ./data/akjol.db
+          ONISEP_DATASET_URL: ${{ secrets.ONISEP_DATASET_URL }}
+        run: |
+          SOURCE="${{ github.event.inputs.source || 'onisep' }}"
+          pnpm ingest "$SOURCE"
+
+      - name: Upload DB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: akjol-db-${{ github.run_id }}
+          path: data/akjol.db
+          retention-days: 7

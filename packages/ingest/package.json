@@ -1,0 +1,32 @@
+{
+  "name": "@akjol/ingest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/cli.ts"
+  },
+  "scripts": {
+    "ingest": "tsx src/cli.ts",
+    "ingest:onisep": "tsx src/cli.ts onisep",
+    "ingest:mon-master": "tsx src/cli.ts mon-master",
+    "ingest:ucas": "tsx src/cli.ts ucas",
+    "ingest:common-app": "tsx src/cli.ts common-app",
+    "ingest:all": "tsx src/cli.ts all",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@akjol/db": "workspace:*",
+    "csv-parse": "^5.5.6",
+    "drizzle-orm": "^0.36.0",
+    "undici": "^6.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

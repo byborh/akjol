@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1778246474180,
+      "tag": "0000_easy_cargill",
+      "breakpoints": true
+    }
+  ]
+}

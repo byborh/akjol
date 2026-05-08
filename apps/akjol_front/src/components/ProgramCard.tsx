@@ -21,8 +21,7 @@ export function ProgramCard({ program, feasibility }: Props) {
     e.stopPropagation();
     pushStep(program.id);
     requestAnimationFrame(() => {
-      const top = document.querySelector("main");
-      top?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }
 

@@ -38,7 +38,7 @@ export function JobTargetPanel() {
       pushStep(step.programId);
     }
     requestAnimationFrame(() => {
-      document.querySelector("main")?.scrollIntoView({ behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }
 

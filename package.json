@@ -12,7 +12,13 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:akjol": "drizzle-kit akjol",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "ingest": "pnpm --filter @akjol/ingest ingest",
+    "ingest:onisep": "pnpm --filter @akjol/ingest ingest:onisep",
+    "ingest:mon-master": "pnpm --filter @akjol/ingest ingest:mon-master",
+    "ingest:ucas": "pnpm --filter @akjol/ingest ingest:ucas",
+    "ingest:common-app": "pnpm --filter @akjol/ingest ingest:common-app",
+    "ingest:all": "pnpm --filter @akjol/ingest ingest:all"
   },
   "devDependencies": {
     "drizzle-kit": "^0.30.0",

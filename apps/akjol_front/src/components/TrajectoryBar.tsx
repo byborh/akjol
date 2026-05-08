@@ -51,10 +51,10 @@ export function TrajectoryBar() {
 
   return (
     <div
-      className="sticky z-20 bg-[#FAFAF7]/90 backdrop-blur-md border-b border-black/5"
-      style={{ top: 56 }}
+      className="sticky z-20 bg-[#FAFAF7]/90 backdrop-blur-md border-b border-black/5 scroll-mt-14"
+      style={{ top: 57 }}
     >
-      <div className="max-w-5xl mx-auto px-5 py-2.5 flex items-center gap-2 overflow-x-auto">
+      <div className="max-w-5xl mx-auto px-5 py-3 flex items-center gap-2 overflow-x-auto">
         <div className="relative shrink-0" ref={swapRef}>
           <button
             onClick={() => setOpenSwap((v) => !v)}

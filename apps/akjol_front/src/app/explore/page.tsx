@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Filter, Sparkles, List, Globe as GlobeIcon } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
@@ -51,20 +51,31 @@ function ExploreInner() {
   const [aimFilter, setAimFilter] = useState<string>("");
   const [view, setView] = useState<"list" | "globe">("list");
 
+  // URL → store : une seule fois au mount, pour permettre les liens partagés
+  // (?from=…&via=…). Ensuite c'est strictement à sens unique store → URL —
+  // sinon le router.replace ci-dessous re-fait remonter l'URL au store, qui
+  // recrée des références d'array → relance un replace → ping-pong infini.
+  const didLoadFromUrl = useRef(false);
   useEffect(() => {
+    if (didLoadFromUrl.current) return;
+    didLoadFromUrl.current = true;
     loadFromUrl({ from: searchParams.get("from"), via: searchParams.get("via") });
   }, [loadFromUrl, searchParams]);
 
+  // Store → URL : on synchronise l'URL après chaque changement de trajectoire.
+  // On compare au snapshot URL courant pour ne pas dispatcher un replace inutile.
+  const lastWrittenUrl = useRef<string | null>(null);
   useEffect(() => {
+    if (!didLoadFromUrl.current) return;
     const params = new URLSearchParams();
     if (fromOverride) params.set("from", fromOverride.code);
     if (steps.length) params.set("via", steps.map((s) => s.programId).join(","));
     const qs = params.toString();
     const target = qs ? `${pathname}?${qs}` : pathname;
-    if (target !== `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`) {
-      router.replace(target, { scroll: false });
-    }
-  }, [fromOverride, steps, pathname, router, searchParams]);
+    if (target === lastWrittenUrl.current) return;
+    lastWrittenUrl.current = target;
+    router.replace(target, { scroll: false });
+  }, [fromOverride, steps, pathname, router]);
 
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
