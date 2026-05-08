@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowRight, Compass, Globe2, Shield } from "lucide-react";
+import { ArrowRight, BookOpen, Compass, Globe2, Shield } from "lucide-react";
 import { PageContainer } from "../components/PageContainer";
 import { usePassportStore } from "../store/passport-store";
 import { useParcoursStore } from "../store/parcours-store";
@@ -75,6 +75,13 @@ function LandingInner() {
             className="inline-flex items-center gap-2 rounded-lg px-5 py-3 font-medium text-[#1a1d24] border border-black/10 hover:border-[#ee7768] transition"
           >
             Mon profil
+          </Link>
+          <Link
+            href="/methodologie"
+            className="inline-flex items-center gap-2 rounded-lg px-5 py-3 font-medium text-[#1a1d24]/70 hover:text-[#ee7768] transition"
+            title="Comment AkJol calcule ses probabilités, sources, biais"
+          >
+            <BookOpen size={15} /> Comment on calcule
           </Link>
         </div>
       </section>

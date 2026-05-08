@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   ReactFlow,
   Background,
   type Node,
   type Edge,
+  type NodeMouseHandler,
   Position,
   MarkerType,
 } from "@xyflow/react";
@@ -50,9 +52,20 @@ export function TrajectoryFlow({
   targetJobLabel,
   height = 220,
 }: Props) {
+  const router = useRouter();
   const { nodes, edges } = useMemo(
     () => buildGraph(passport, fromOverride ?? null, steps, targetJobLabel),
     [passport, fromOverride, steps, targetJobLabel],
+  );
+
+  const onNodeClick = useCallback<NodeMouseHandler>(
+    (_, node) => {
+      // Les nœuds-étape ont un programId attaché dans node.data.programId.
+      // Les nœuds start/end ne sont pas navigables.
+      const programId = (node.data as { programId?: string }).programId;
+      if (programId) router.push(`/program/${programId}`);
+    },
+    [router],
   );
 
   if (steps.length === 0 && !fromOverride) {
@@ -78,6 +91,7 @@ export function TrajectoryFlow({
         zoomOnPinch={false}
         panOnScroll={false}
         panOnDrag={true}
+        onNodeClick={onNodeClick}
         fitView
         fitViewOptions={{ padding: 0.18, includeHiddenNodes: false }}
         proOptions={{ hideAttribution: true }}
@@ -153,10 +167,11 @@ function buildGraph(
       type: "default",
       position: { x: (i + 1) * (NODE_WIDTH + GAP_X), y: 0 },
       data: {
+        programId: step.programId,
         label: (
           <div className="text-left p-1">
             <div className="text-[9px] uppercase tracking-wider text-[#a8463a] font-semibold">
-              Étape {i + 1}
+              Étape {i + 1} · clique pour la fiche
             </div>
             <div className="text-[12px] font-medium leading-tight text-[#1a1d24] line-clamp-2">
               {program?.title ?? step.programId}
@@ -180,6 +195,7 @@ function buildGraph(
         border: "1.5px solid #ee776850",
         borderRadius: 12,
         padding: 0,
+        cursor: "pointer",
       },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,

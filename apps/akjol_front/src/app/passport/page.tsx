@@ -9,9 +9,10 @@ import { usePassportStore } from "../../store/passport-store";
 import { useParcoursStore } from "../../store/parcours-store";
 import { useMounted } from "../../hooks/useMounted";
 import { PlanTimeline } from "../../components/PlanTimeline";
+import { DocumentsChecklist } from "../../components/DocumentsChecklist";
 import { scholarshipsForPassport, formatAmount } from "../../data/scholarships";
 
-const TABS = ["Mon profil", "Mon plan", "Mes parcours"] as const;
+const TABS = ["Mon profil", "Mon plan", "Mes documents", "Mes parcours"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function PassportPage() {
@@ -173,6 +174,8 @@ export default function PassportPage() {
         ) : null}
 
         {tab === "Mon plan" ? <PlanTimeline /> : null}
+
+        {tab === "Mes documents" ? <DocumentsChecklist /> : null}
 
         {tab === "Mes parcours" ? <ParcoursList /> : null}
       </div>

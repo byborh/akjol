@@ -19,11 +19,14 @@ import { PageContainer } from "../../../components/PageContainer";
 import { findJob, JOBS } from "../../../data/jobs";
 import { PROGRAMS } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
-import { reverseRoutes, type Trajectory } from "../../../engine/reverseRoutes";
+import { reverseRoutes, type Trajectory, type RouteStep } from "../../../engine/reverseRoutes";
 import { usePassportStore } from "../../../store/passport-store";
 import { useTrajectoryStore, applyTrajectory } from "../../../store/trajectory-store";
 import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { useMounted } from "../../../hooks/useMounted";
+import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
+import { findProgram } from "../../../data/programs";
+import type { Passport, TrajectoryStep } from "../../../types";
 
 const SAFE_AUTOMATION = 0.2;
 
@@ -235,9 +238,14 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
                 dans la base actuelle).
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {trajectories.map((t, i) => (
-                  <TrajectoryRow key={i} t={t} />
+                  <TrajectoryRow
+                    key={i}
+                    t={t}
+                    passport={effective ?? passport}
+                    targetJobLabel={job.label}
+                  />
                 ))}
               </div>
             )}
@@ -333,23 +341,46 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   );
 }
 
-function TrajectoryRow({ t }: { t: Trajectory }) {
+function routeStepToTrajectoryStep(s: RouteStep): TrajectoryStep {
+  // RouteStep (engine) n'a pas resultingDiplomaLabel/Level/yearsAdded directement
+  // exploitables. On retrouve le programme pour récupérer les champs manquants.
+  const p = findProgram(s.programId);
+  return {
+    programId: s.programId,
+    resultingDiplomaCode: s.resultingDiplomaCode,
+    resultingDiplomaLabel: p?.resultingDiplomaLabel ?? s.resultingDiplomaCode,
+    resultingLevel: p?.level ?? "certif",
+    countryRef: s.countryRef,
+    yearsAdded: s.durationYears,
+  };
+}
+
+function TrajectoryRow({
+  t,
+  passport,
+  targetJobLabel,
+}: {
+  t: Trajectory;
+  passport: Passport;
+  targetJobLabel: string;
+}) {
   const flags = t.countries.map((c) => findCountry(c)?.flag ?? "").filter(Boolean).join(" ");
+  const tSteps = t.steps.map(routeStepToTrajectoryStep);
   return (
-    <Link
-      href={`/program/${t.steps[0].programId}`}
-      className="block rounded-lg border border-black/5 bg-[#fafaf7] hover:bg-[#fff7f5] hover:border-[#ee7768]/30 transition p-3 group"
-    >
-      <div className="text-[11px] text-[#1a1d24]/60 mb-1">
+    <article className="rounded-lg border border-black/5 bg-[#fafaf7] p-3">
+      <div className="text-[11px] text-[#1a1d24]/60 mb-2">
         {flags} {t.steps.length} étape{t.steps.length > 1 ? "s" : ""} · {t.totalYears} an
         {t.totalYears > 1 ? "s" : ""} ·{" "}
         {t.totalCost === 0 ? "Gratuit" : `${t.totalCost.toLocaleString("fr-FR")} €`} · proba{" "}
         {Math.round(t.joinedProbability * 100)}%
       </div>
-      <div className="text-sm font-medium leading-snug group-hover:text-[#ee7768] transition">
-        {t.steps.map((s) => s.title).join(" → ")}
-      </div>
-      <p className="text-[11px] text-[#1a1d24]/60 mt-1">{t.rationale}</p>
-    </Link>
+      <TrajectoryFlow
+        passport={passport}
+        steps={tSteps}
+        targetJobLabel={targetJobLabel}
+        height={180}
+      />
+      <p className="text-[11px] text-[#1a1d24]/60 mt-2">{t.rationale}</p>
+    </article>
   );
 }
