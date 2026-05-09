@@ -9,11 +9,15 @@
  * que pour le dev/démo offline — il reste utile pour que `next dev` ait
  * toujours quelque chose à afficher.
  */
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { createDb, programs, jobs } from "@akjol/db";
 import { PROGRAMS } from "../src/data/programs.js";
 import { JOBS } from "../src/data/jobs.js";
 
-const DB_PATH = process.env.AKJOL_DB ?? "./data/akjol.db";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// __dirname = apps/akjol_front/scripts → repo root = ../../..
+const DB_PATH = process.env.AKJOL_DB ?? resolve(__dirname, "../../../data/akjol.db");
 
 function main() {
   const db = createDb(DB_PATH);

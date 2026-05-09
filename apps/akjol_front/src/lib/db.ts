@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { createDb, type Db } from "@akjol/db";
 
 /**
@@ -10,7 +12,9 @@ import { createDb, type Db } from "@akjol/db";
  * consomment ça doivent traiter null comme "DB indisponible" et fallback
  * sur les fixtures hardcodées (zéro régression démo).
  */
-const DB_PATH = process.env.AKJOL_DB ?? "./data/akjol.db";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// __dirname = apps/akjol_front/src/lib → repo root = ../../../..
+const DB_PATH = process.env.AKJOL_DB ?? resolve(__dirname, "../../../../data/akjol.db");
 
 type Cache = { db: Db | null; tried: boolean };
 const globalForDb = globalThis as unknown as { __akjolDb?: Cache };

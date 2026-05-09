@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import type { Db } from "./index.js";
-import { programs, jobs, type ProgramRow, type JobRow } from "./schema.js";
+import type { Db } from "./index";
+import { programs, jobs, type ProgramRow, type JobRow } from "./schema";
 
 /**
  * Fonctions de lecture utilisées par les routes API du front.
