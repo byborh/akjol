@@ -135,6 +135,77 @@ export const programs = sqliteTable(
 );
 
 /**
+ * users : 1 ligne par utilisateur connecté. L'auth crée la ligne au premier
+ * login (upsert sur email). `role` sert au gating /admin (cf. Phase 3 doc).
+ */
+export const users = sqliteTable(
+  "users",
+  {
+    id: text("id").primaryKey(), // nanoid 12 chars
+    email: text("email").notNull().unique(),
+    name: text("name").notNull(),
+    role: text("role").notNull().default("student"), // "student" | "curator" | "admin"
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    lastLoginAt: integer("last_login_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => ({
+    byEmail: index("users_email_idx").on(t.email),
+  }),
+);
+
+/**
+ * user_passports : un blob JSON par user. Le passeport est atomique
+ * (édité tout entier via /onboarding), JSON suffit, pas de colonnes éclatées.
+ * `updatedAt` sert au lastWriteWins de la sync.
+ */
+export const userPassports = sqliteTable("user_passports", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  passportJson: text("passport_json").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/** user_plans : items[] du plan-store, sérialisé. */
+export const userPlans = sqliteTable("user_plans", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  planJson: text("plan_json").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/** user_parcours : parcours[] du parcours-store. */
+export const userParcours = sqliteTable("user_parcours", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  parcoursJson: text("parcours_json").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/** user_documents : metas du documents-store. */
+export const userDocuments = sqliteTable("user_documents", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  documentsJson: text("documents_json").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/**
  * jobs : miroir du type Job front (apps/akjol_front/src/data/jobs.ts).
  * Champs structurés (salary, regions, tasks, requiresDiplomas, matchKeywords)
  * en JSON text — même logique que programs.
@@ -190,3 +261,9 @@ export type ProgramInsert = typeof programs.$inferInsert;
 export type JobRow = typeof jobs.$inferSelect;
 export type JobInsert = typeof jobs.$inferInsert;
 export type IngestionRun = typeof ingestionRuns.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type UserInsert = typeof users.$inferInsert;
+export type UserPassport = typeof userPassports.$inferSelect;
+export type UserPlan = typeof userPlans.$inferSelect;
+export type UserParcours = typeof userParcours.$inferSelect;
+export type UserDocuments = typeof userDocuments.$inferSelect;

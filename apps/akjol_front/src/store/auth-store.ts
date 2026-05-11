@@ -2,7 +2,13 @@
 
 import { create } from "zustand";
 
-export type AuthUser = { email: string; name: string; since?: number };
+export type AuthUser = {
+  userId: string;
+  email: string;
+  name: string;
+  role?: "student" | "curator" | "admin";
+  since?: number;
+};
 
 type State = {
   user: AuthUser | null;

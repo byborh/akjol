@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, LogOut, LogIn, Download, Trash2, Mail } from "lucide-react";
+import { ArrowLeft, CheckCircle2, LogOut, LogIn, Download, Trash2, Mail, RefreshCw, AlertTriangle } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { useAuthStore } from "../../store/auth-store";
 import { usePassportStore } from "../../store/passport-store";
 import { usePlanStore } from "../../store/plan-store";
+import { useParcoursStore } from "../../store/parcours-store";
+import { useDocumentsStore } from "../../store/documents-store";
+import { useSync } from "../../hooks/useSync";
 
 export default function AccountPage() {
   const user = useAuthStore((s) => s.user);
@@ -19,6 +22,9 @@ export default function AccountPage() {
   const savedPlan = usePassportStore((s) => s.savedPlan);
   const resetPassport = usePassportStore((s) => s.reset);
   const planItems = usePlanStore((s) => s.items);
+  const parcours = useParcoursStore((s) => s.parcours);
+  const documentsMetas = useDocumentsStore((s) => s.metas);
+  const sync = useSync();
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -65,18 +71,34 @@ export default function AccountPage() {
     URL.revokeObjectURL(url);
   }
 
-  function deleteAccount() {
-    const c1 = confirm("Confirmer la suppression de toutes tes données locales ?");
+  async function deleteAccount() {
+    const c1 = confirm("Confirmer la suppression de toutes tes données (compte + passeport + plan + parcours + documents) ?");
     if (!c1) return;
     const c2 = confirm("Vraiment ? Cette action est irréversible.");
     if (!c2) return;
     const c3 = prompt("Tape 'SUPPRIMER' pour confirmer définitivement.");
     if (c3 !== "SUPPRIMER") return;
+
+    // Si compte serveur : DELETE /api/account purge la DB en cascade.
+    if (user) {
+      try {
+        const r = await fetch("/api/account", { method: "DELETE", credentials: "same-origin" });
+        if (!r.ok && r.status !== 401) {
+          alert(`Erreur serveur (${r.status}). Suppression locale uniquement.`);
+        }
+      } catch {
+        alert("Réseau injoignable. Suppression locale uniquement.");
+      }
+    }
+
+    // Wipe local quel que soit le succès serveur (RGPD côté navigateur).
     resetPassport();
     localStorage.removeItem("akjol-plan-v1");
+    localStorage.removeItem("akjol-parcours-v1");
+    localStorage.removeItem("akjol-documents-v1");
     localStorage.removeItem("akjol-equivalences");
-    void logout();
-    alert("Toutes tes données locales sont effacées.");
+    if (user) void logout();
+    alert("Toutes tes données sont effacées (DB + local).");
   }
 
   return (
@@ -138,6 +160,13 @@ export default function AccountPage() {
                 Candidatures dans le plan :{" "}
                 <span className="text-[#1a1d24]">{planItems.length}</span>
               </li>
+              <li>
+                Parcours sauvegardés : <span className="text-[#1a1d24]">{parcours.length}</span>
+              </li>
+              <li>
+                Documents suivis :{" "}
+                <span className="text-[#1a1d24]">{Object.keys(documentsMetas).length}</span>
+              </li>
             </ul>
             <div className="flex flex-wrap gap-2 mt-3">
               <button
@@ -158,12 +187,7 @@ export default function AccountPage() {
             </p>
           </div>
 
-          <div className="rounded-xl bg-[#fcf6e8] border border-[#e6c068]/30 p-4 text-[12px] text-[#8a5314]">
-            <strong>Profil local pour l'instant.</strong> La session te connecte côté serveur,
-            mais ton passeport et tes parcours restent stockés sur cet appareil (localStorage).
-            La sync entre appareils arrivera avec la persistance compte côté DB — pas encore
-            livrée. Si tu changes de navigateur, tu repars avec un passeport vide.
-          </div>
+          <SyncBadge sync={sync} />
         </div>
       ) : (
         <div className="mt-6 space-y-4">
@@ -216,4 +240,57 @@ export default function AccountPage() {
       )}
     </PageContainer>
   );
+}
+
+function SyncBadge({ sync }: { sync: ReturnType<typeof useSync> }) {
+  const { status, lastSyncedAt, error } = sync;
+  const stamp = lastSyncedAt
+    ? lastSyncedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
+
+  if (status === "synced") {
+    return (
+      <div className="rounded-xl bg-[#a3cf9120] border border-[#a3cf91]/40 p-4 text-[12px] text-[#3a6f2c] flex items-center gap-2">
+        <CheckCircle2 size={14} />
+        <span>
+          <strong>Synchronisé avec ton compte.</strong> Dernière sync à {stamp}. Tu peux te connecter
+          depuis un autre appareil, tes données te suivent.
+        </span>
+      </div>
+    );
+  }
+  if (status === "pulling" || status === "pushing") {
+    return (
+      <div className="rounded-xl bg-[#fcf6e8] border border-[#e6c068]/30 p-4 text-[12px] text-[#8a5314] flex items-center gap-2">
+        <RefreshCw size={14} className="animate-spin" />
+        <span>
+          {status === "pulling" ? "Chargement de tes données…" : "Sauvegarde en cours…"}
+        </span>
+      </div>
+    );
+  }
+  if (status === "offline") {
+    return (
+      <div className="rounded-xl bg-[#fcf6e8] border border-[#e6c068]/30 p-4 text-[12px] text-[#8a5314] flex items-start gap-2">
+        <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+        <span>
+          <strong>Mode local uniquement.</strong> La DB serveur est indisponible — tes données
+          restent sur cet appareil. La sync reprendra dès que la connexion DB revient (rien à
+          faire de ton côté).
+        </span>
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <div className="rounded-xl bg-[#d9656520] border border-[#d96565]/40 p-4 text-[12px] text-[#7e2929] flex items-start gap-2">
+        <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+        <span>
+          <strong>Sync en échec.</strong> {error ?? "Erreur inconnue."} Tes données locales sont
+          intactes — la prochaine modification re-tentera la sync.
+        </span>
+      </div>
+    );
+  }
+  return null;
 }

@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
 
 export type Session = {
+  userId: string;
   email: string;
   name: string;
+  role: "student" | "curator" | "admin";
   iat: number;
 };
 
@@ -50,10 +52,22 @@ export function decodeSession(token: string | undefined): Session | null {
     return null;
   }
   try {
-    const data = JSON.parse(fromBase64url(payload).toString("utf8")) as Session;
-    if (typeof data.email !== "string" || typeof data.name !== "string") return null;
+    const data = JSON.parse(fromBase64url(payload).toString("utf8")) as Partial<Session>;
+    if (
+      typeof data.email !== "string" ||
+      typeof data.name !== "string" ||
+      typeof data.userId !== "string"
+    ) {
+      return null;
+    }
     if (data.iat && Date.now() / 1000 - data.iat > MAX_AGE_SECONDS) return null;
-    return data;
+    return {
+      userId: data.userId,
+      email: data.email,
+      name: data.name,
+      role: (data.role as Session["role"]) ?? "student",
+      iat: data.iat ?? 0,
+    };
   } catch {
     return null;
   }

@@ -10,6 +10,12 @@ export async function GET() {
     return NextResponse.json({ user: null }, { status: 200 });
   }
   return NextResponse.json({
-    user: { email: session.email, name: session.name, since: session.iat },
+    user: {
+      userId: session.userId,
+      email: session.email,
+      name: session.name,
+      role: session.role,
+      since: session.iat,
+    },
   });
 }
