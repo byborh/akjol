@@ -17,6 +17,8 @@
     "@akjol/logger": "workspace:*",
     "@akjol/shared": "workspace:*",
     "@akjol/ui": "workspace:*",
+    "@tanstack/react-query": "^5.100.9",
+    "@tanstack/react-query-devtools": "^5.100.9",
     "@xyflow/react": "^12.10.2",
     "framer-motion": "^12.34.5",
     "leaflet": "^1.9.4",

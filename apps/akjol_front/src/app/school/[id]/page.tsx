@@ -15,13 +15,14 @@ import {
 import { PageContainer } from "../../../components/PageContainer";
 import { GaugeCircular } from "../../../components/GaugeCircular";
 import { StatusBadge } from "../../../components/StatusBadge";
-import { findSchool } from "../../../data/schools";
+import { getSchoolsFrom } from "../../../data/schools";
 import { findCountry } from "../../../data/countries";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-store";
 import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { useMounted } from "../../../hooks/useMounted";
+import { usePrograms } from "../../../hooks/data";
 import { GitCompare } from "lucide-react";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -36,7 +37,11 @@ const TYPE_LABEL: Record<string, string> = {
 export default function SchoolPage({ params }: { params: Promise<{ id: string }> }) {
   const mounted = useMounted();
   const { id } = use(params);
-  const school = findSchool(id);
+  const { data: allPrograms = [], isLoading: programsLoading } = usePrograms();
+  const school = useMemo(
+    () => getSchoolsFrom(allPrograms).find((s) => s.id === id),
+    [allPrograms, id],
+  );
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
   const compareSchools = usePassportStore((s) => s.comparatorSchools);
@@ -50,7 +55,7 @@ export default function SchoolPage({ params }: { params: Promise<{ id: string }>
     [passport, fromOverride, steps, isComplete],
   );
 
-  if (!mounted) return null;
+  if (!mounted || programsLoading) return null;
   if (!school) return notFound();
 
   const country = findCountry(school.countryRef);

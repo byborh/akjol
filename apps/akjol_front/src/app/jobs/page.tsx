@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Briefcase, Search, X, MapPin, Coins, Activity, Sparkles } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
-import { JOBS } from "../../data/jobs";
-import { PROGRAMS } from "../../data/programs";
 import { findCountry } from "../../data/countries";
 import type { Job } from "../../data/jobs";
+import type { Program } from "../../types";
+import { useJobs, usePrograms } from "../../hooks/data";
 
 const DOMAINS = [
   "Tech",
@@ -30,8 +30,8 @@ function normalize(s: string): string {
     .toLowerCase();
 }
 
-function programsLeadingTo(job: Job): number {
-  return PROGRAMS.filter((p) =>
+function programsLeadingTo(job: Job, programs: Program[]): number {
+  return programs.filter((p) =>
     p.outcomesJobs.some((label) => {
       const lc = normalize(label);
       const jl = normalize(job.label);
@@ -53,9 +53,12 @@ export default function JobsPage() {
   const [search, setSearch] = useState("");
   const [domain, setDomain] = useState("");
 
+  const { data: jobs = [] } = useJobs();
+  const { data: programs = [] } = usePrograms();
+
   const filtered = useMemo(() => {
     const q = normalize(search.trim());
-    return JOBS.filter((j) => {
+    return jobs.filter((j) => {
       if (domain && !j.domains.includes(domain)) return false;
       if (!q) return true;
       const hay = normalize(
@@ -63,7 +66,7 @@ export default function JobsPage() {
       );
       return hay.includes(q);
     });
-  }, [search, domain]);
+  }, [jobs, search, domain]);
 
   return (
     <PageContainer>
@@ -74,7 +77,7 @@ export default function JobsPage() {
           </div>
           <h1 className="text-3xl font-medium tracking-tight">Quel métier vises-tu ?</h1>
           <p className="text-sm text-[#1a1d24]/70 mt-1">
-            <span className="font-semibold text-[#1a1d24]">{JOBS.length}</span> métiers · clique pour
+            <span className="font-semibold text-[#1a1d24]">{jobs.length}</span> métiers · clique pour
             voir les <em>routes</em> depuis ton passeport actuel.
           </p>
         </div>
@@ -137,7 +140,7 @@ export default function JobsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCard key={job.id} job={job} programs={programs} />
           ))}
         </div>
       )}
@@ -158,10 +161,10 @@ export default function JobsPage() {
   );
 }
 
-function JobCard({ job }: { job: Job }) {
+function JobCard({ job, programs }: { job: Job; programs: Program[] }) {
   const frSalary = job.salary.find((s) => s.country === "FR");
   const otherSalaries = job.salary.filter((s) => s.country !== "FR");
-  const programsCount = programsLeadingTo(job);
+  const programsCount = programsLeadingTo(job, programs);
   const automationPct = Math.round(job.riskAutomation * 100);
 
   return (

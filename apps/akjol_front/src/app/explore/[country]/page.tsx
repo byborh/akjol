@@ -7,8 +7,8 @@ import { PageContainer } from "../../../components/PageContainer";
 import { ProgramCard } from "../../../components/ProgramCard";
 import { Globe } from "../../../components/Globe";
 import { findCountry } from "../../../data/countries";
-import { PROGRAMS } from "../../../data/programs";
 import { findCorridor } from "../../../data/visaCorridors";
+import { usePrograms } from "../../../hooks/data";
 import { citiesByCountry, totalMonthly, avgMonthlyEurForCountry } from "../../../data/costOfLiving";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
@@ -32,6 +32,7 @@ export default function CountryDrawerPage({ params }: { params: Promise<{ countr
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
   const equivEdges = useEquivalencesStore((s) => s.edges);
+  const { data: programs = [] } = usePrograms();
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
     [passport, fromOverride, steps],
@@ -40,14 +41,14 @@ export default function CountryDrawerPage({ params }: { params: Promise<{ countr
   const [onlyOpen, setOnlyOpen] = useState(false);
 
   const enriched = useMemo(() => {
-    return PROGRAMS.filter((p) => p.countryRef === iso2)
+    return programs.filter((p) => p.countryRef === iso2)
       .map((p) => ({ program: p, feasibility: computeFeasibility(effective, p, equivEdges) }))
       .sort((a, b) => {
         const s = STATUS_ORDER[a.feasibility.status] - STATUS_ORDER[b.feasibility.status];
         if (s !== 0) return s;
         return b.feasibility.probability.value - a.feasibility.probability.value;
       });
-  }, [effective, iso2, equivEdges]);
+  }, [programs, effective, iso2, equivEdges]);
 
   const stats = useMemo(() => {
     const open = enriched.filter((e) => e.feasibility.status === "open").length;

@@ -1,3 +1,10 @@
+/**
+ * SEED ONLY pour la donnée (`JOBS`).
+ *
+ * Le type `Job` reste import-libre. Pour la donnée, utilise `useJobs()` /
+ * `useJob(id)` dans les composants — qui passent par `/api/jobs` → SQLite avec
+ * fallback fixtures côté serveur.
+ */
 import type { ProgramLevel } from "../types";
 
 export type Job = {

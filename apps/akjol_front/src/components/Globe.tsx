@@ -5,8 +5,8 @@ import dynamic from "next/dynamic";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import type { Feature, Geometry } from "geojson";
-import { PROGRAMS } from "../data/programs";
 import { COUNTRIES, findCountry } from "../data/countries";
+import { usePrograms } from "../hooks/data";
 import { numericToAlpha2 } from "../data/isoNumeric";
 import { statsByCountry, colorForStatus, type CountryStats } from "../engine/countryFeasibility";
 import { usePassportStore } from "../store/passport-store";
@@ -33,14 +33,15 @@ export function Globe({ height = 560 }: { height?: number }) {
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
   const equivEdges = useEquivalencesStore((s) => s.edges);
+  const { data: programs = [] } = usePrograms();
   const effective = useMemo(
     () => applyTrajectory(passport, { fromOverride, steps }),
     [passport, fromOverride, steps],
   );
 
   const stats = useMemo(
-    () => statsByCountry(effective, PROGRAMS, equivEdges),
-    [effective, equivEdges],
+    () => statsByCountry(effective, programs, equivEdges),
+    [effective, programs, equivEdges],
   );
 
   useEffect(() => {

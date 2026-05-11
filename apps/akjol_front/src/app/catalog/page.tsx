@@ -8,9 +8,9 @@ import { PageContainer } from "../../components/PageContainer";
 import { SchoolCard } from "../../components/SchoolCard";
 import { GaugeCircular } from "../../components/GaugeCircular";
 import { StatusBadge } from "../../components/StatusBadge";
-import { PROGRAMS } from "../../data/programs";
 import { COUNTRIES } from "../../data/countries";
-import { getAllSchools, getUniqueCities } from "../../data/schools";
+import { getSchoolsFrom, getUniqueCitiesFrom } from "../../data/schools";
+import { usePrograms } from "../../hooks/data";
 import { computeFeasibility } from "../../engine/feasibility";
 import { usePassportStore } from "../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
@@ -66,6 +66,10 @@ function CatalogInner() {
   const steps = useTrajectoryStore((s) => s.steps);
   const equivEdges = useEquivalencesStore((s) => s.edges);
 
+  const { data: programs = [], isLoading } = usePrograms();
+  const allSchools = useMemo(() => getSchoolsFrom(programs), [programs]);
+  const allCities = useMemo(() => getUniqueCitiesFrom(allSchools), [allSchools]);
+
   const [view, setView] = useState<ViewMode>("formations");
   const [schoolDisplay, setSchoolDisplay] = useState<SchoolDisplayMode>("list");
   const [search, setSearch] = useState("");
@@ -81,7 +85,7 @@ function CatalogInner() {
 
   const filteredFormations = useMemo(() => {
     const q = normalize(search.trim());
-    return PROGRAMS.filter((p) => {
+    return programs.filter((p) => {
       if (country && p.countryRef !== country) return false;
       if (level && p.level !== level) return false;
       if (domain && !p.domains.includes(domain)) return false;
@@ -98,11 +102,11 @@ function CatalogInner() {
       );
       return hay.includes(q);
     });
-  }, [search, country, level, domain]);
+  }, [programs, search, country, level, domain]);
 
   const filteredSchools = useMemo(() => {
     const q = normalize(search.trim());
-    return getAllSchools().filter((s) => {
+    return allSchools.filter((s) => {
       if (country && s.countryRef !== country) return false;
       if (city && s.city !== city) return false;
       if (level && !s.programs.some((p) => p.level === level)) return false;
@@ -114,7 +118,7 @@ function CatalogInner() {
         s.programs.some((p) => normalize(p.title).includes(q))
       );
     });
-  }, [search, country, city, level, domain]);
+  }, [allSchools, search, country, city, level, domain]);
 
   return (
     <PageContainer>
@@ -137,7 +141,7 @@ function CatalogInner() {
             boxShadow: view === "formations" ? "0 1px 2px rgba(0,0,0,0.04)" : undefined,
           }}
         >
-          📚 Formations ({PROGRAMS.length})
+          📚 Formations ({isLoading ? "…" : programs.length})
         </button>
         <button
           onClick={() => setView("schools")}
@@ -148,7 +152,7 @@ function CatalogInner() {
             boxShadow: view === "schools" ? "0 1px 2px rgba(0,0,0,0.04)" : undefined,
           }}
         >
-          🏢 Établissements ({getAllSchools().length})
+          🏢 Établissements ({allSchools.length})
         </button>
       </div>
 
@@ -222,7 +226,7 @@ function CatalogInner() {
               className="px-3 py-2.5 rounded-lg border border-black/10 bg-white text-sm"
             >
               <option value="">Toutes villes</option>
-              {getUniqueCities().map((c) => (
+              {allCities.map((c) => (
                 <option key={c} value={c}>
                   📍 {c}
                 </option>

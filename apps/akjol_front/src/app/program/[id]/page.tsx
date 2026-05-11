@@ -23,9 +23,9 @@ import { PageContainer } from "../../../components/PageContainer";
 import { GaugeCircular } from "../../../components/GaugeCircular";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { TrajectoryBar } from "../../../components/TrajectoryBar";
-import { findProgram, getProgramsByFormationCode } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
 import { jobsForProgram } from "../../../data/jobs";
+import { useProgram, usePrograms } from "../../../hooks/data";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { usePassportStore } from "../../../store/passport-store";
 import { usePlanStore } from "../../../store/plan-store";
@@ -50,7 +50,8 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
   const router = useRouter();
   const mounted = useMounted();
   const { id } = use(params);
-  const program = findProgram(id);
+  const { data: program, isLoading: programLoading } = useProgram(id);
+  const { data: allPrograms = [] } = usePrograms();
   const passport = usePassportStore((s) => s.passport);
   const savedPlan = usePassportStore((s) => s.savedPlan);
   const toggleSaved = usePassportStore((s) => s.toggleSaved);
@@ -74,10 +75,12 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
 
   const otherSchoolsTeachingThisFormation = useMemo<Program[]>(() => {
     if (!program) return [];
-    return getProgramsByFormationCode(program.formationCode).filter((p) => p.id !== program.id);
-  }, [program]);
+    return allPrograms.filter(
+      (p) => p.formationCode === program.formationCode && p.id !== program.id,
+    );
+  }, [program, allPrograms]);
 
-  if (!mounted) return null;
+  if (!mounted || programLoading) return null;
   if (!program || !feasibility) return notFound();
 
   const country = findCountry(program.countryRef);

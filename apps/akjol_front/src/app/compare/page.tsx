@@ -6,19 +6,20 @@ import { ArrowLeft, Building2, ExternalLink, GraduationCap, Sparkles, Star, X } 
 import { PageContainer } from "../../components/PageContainer";
 import { GaugeCircular } from "../../components/GaugeCircular";
 import { StatusBadge } from "../../components/StatusBadge";
-import { findProgram } from "../../data/programs";
-import { findSchool } from "../../data/schools";
+import { getSchoolsFrom, type SchoolEntry } from "../../data/schools";
 import { findCountry } from "../../data/countries";
 import { computeFeasibility } from "../../engine/feasibility";
 import { usePassportStore } from "../../store/passport-store";
 import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-store";
 import { useEquivalencesStore } from "../../store/equivalences-store";
 import { useMounted } from "../../hooks/useMounted";
+import { usePrograms } from "../../hooks/data";
+import type { Program } from "../../types";
 
 export default function ComparePage() {
   const mounted = useMounted();
-  const programs = usePassportStore((s) => s.comparator);
-  const schools = usePassportStore((s) => s.comparatorSchools);
+  const programIds = usePassportStore((s) => s.comparator);
+  const schoolIds = usePassportStore((s) => s.comparatorSchools);
   const togglePr = usePassportStore((s) => s.toggleCompare);
   const togglSc = usePassportStore((s) => s.toggleCompareSchool);
   const passport = usePassportStore((s) => s.passport);
@@ -26,14 +27,27 @@ export default function ComparePage() {
   const fromOverride = useTrajectoryStore((s) => s.fromOverride);
   const steps = useTrajectoryStore((s) => s.steps);
   const equivEdges = useEquivalencesStore((s) => s.edges);
+  const { data: allPrograms = [] } = usePrograms();
 
   const effective = useMemo(
     () => (isComplete ? applyTrajectory(passport, { fromOverride, steps }) : null),
     [passport, fromOverride, steps, isComplete],
   );
 
-  const programItems = programs.map(findProgram).filter(Boolean) as NonNullable<ReturnType<typeof findProgram>>[];
-  const schoolItems = schools.map(findSchool).filter(Boolean) as NonNullable<ReturnType<typeof findSchool>>[];
+  const programItems = useMemo<Program[]>(
+    () =>
+      programIds
+        .map((id) => allPrograms.find((p) => p.id === id))
+        .filter((p): p is Program => Boolean(p)),
+    [programIds, allPrograms],
+  );
+
+  const schoolItems = useMemo<SchoolEntry[]>(() => {
+    const schools = getSchoolsFrom(allPrograms);
+    return schoolIds
+      .map((id) => schools.find((s) => s.id === id))
+      .filter((s): s is SchoolEntry => Boolean(s));
+  }, [schoolIds, allPrograms]);
 
   if (!mounted) return null;
   if (programItems.length === 0 && schoolItems.length === 0) {
@@ -95,7 +109,7 @@ function ProgramComparison({
   edges,
   onRemove,
 }: {
-  items: NonNullable<ReturnType<typeof findProgram>>[];
+  items: Program[];
   effective: ReturnType<typeof applyTrajectory> | null;
   edges: ReturnType<typeof useEquivalencesStore.getState>["edges"];
   onRemove: (id: string) => void;
@@ -255,7 +269,7 @@ function SchoolComparison({
   edges,
   onRemove,
 }: {
-  items: NonNullable<ReturnType<typeof findSchool>>[];
+  items: SchoolEntry[];
   effective: ReturnType<typeof applyTrajectory> | null;
   edges: ReturnType<typeof useEquivalencesStore.getState>["edges"];
   onRemove: (id: string) => void;

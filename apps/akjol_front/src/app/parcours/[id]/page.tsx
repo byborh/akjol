@@ -27,11 +27,11 @@ import { PageContainer } from "../../../components/PageContainer";
 import { useParcoursStore } from "../../../store/parcours-store";
 import { useTrajectoryStore } from "../../../store/trajectory-store";
 import { useMounted } from "../../../hooks/useMounted";
-import { findProgram } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
-import { findSchoolByProgram } from "../../../data/schools";
+import { getSchoolsFrom, slugifySchool } from "../../../data/schools";
 import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
 import { usePassportStore } from "../../../store/passport-store";
+import { usePrograms } from "../../../hooks/data";
 
 const EMOJIS = ["🚀", "🎓", "🌍", "🧠", "⚙️", "🩺", "🎨", "💼", "🔭", "🌱"];
 
@@ -50,6 +50,12 @@ export default function ParcoursDetailPage({ params }: { params: Promise<{ id: s
 
   const setFromOverride = useTrajectoryStore((s) => s.setFromOverride);
   const passport = usePassportStore((s) => s.passport);
+  const { data: allPrograms = [] } = usePrograms();
+  const findProgram = useMemo(
+    () => (id: string) => allPrograms.find((p) => p.id === id),
+    [allPrograms],
+  );
+  const schools = useMemo(() => getSchoolsFrom(allPrograms), [allPrograms]);
 
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -390,7 +396,9 @@ export default function ParcoursDetailPage({ params }: { params: Promise<{ id: s
         <ol className="space-y-3">
           {enrichedSteps.map(({ step, program }, i) => {
             const country = program ? findCountry(program.countryRef) : null;
-            const school = program ? findSchoolByProgram(program) : null;
+            const school = program
+              ? schools.find((s) => s.id === slugifySchool(program.school.name, program.school.city))
+              : null;
             return (
               <li
                 key={step.programId}

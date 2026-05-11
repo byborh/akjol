@@ -16,8 +16,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { PageContainer } from "../../../components/PageContainer";
-import { findJob, JOBS } from "../../../data/jobs";
-import { PROGRAMS } from "../../../data/programs";
 import { findCountry } from "../../../data/countries";
 import { reverseRoutes, type Trajectory, type RouteStep } from "../../../engine/reverseRoutes";
 import { usePassportStore } from "../../../store/passport-store";
@@ -26,6 +24,7 @@ import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { useMounted } from "../../../hooks/useMounted";
 import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
 import { findProgram } from "../../../data/programs";
+import { useJob, useJobs, usePrograms } from "../../../hooks/data";
 import type { Passport, TrajectoryStep } from "../../../types";
 
 const SAFE_AUTOMATION = 0.2;
@@ -53,7 +52,9 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   const { id } = use(params);
   const router = useRouter();
   const mounted = useMounted();
-  const job = findJob(id);
+  const { data: job, isLoading: jobLoading } = useJob(id);
+  const { data: allJobs = [] } = useJobs();
+  const { data: allPrograms = [] } = usePrograms();
 
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
@@ -74,7 +75,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   const programsLeadingHere = useMemo(() => {
     if (!job) return [];
     const jl = job.label.toLowerCase();
-    return PROGRAMS.filter((p) =>
+    return allPrograms.filter((p) =>
       p.outcomesJobs.some((label) => {
         const lc = label.toLowerCase();
         return (
@@ -84,13 +85,21 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
         );
       }),
     );
-  }, [job]);
+  }, [job, allPrograms]);
 
   const relatedJobs = useMemo(() => {
     if (!job) return [];
-    return JOBS.filter((j) => j.id !== job.id && j.domains.some((d) => job.domains.includes(d)))
+    return allJobs.filter((j) => j.id !== job.id && j.domains.some((d) => job.domains.includes(d)))
       .slice(0, 4);
-  }, [job]);
+  }, [job, allJobs]);
+
+  if (jobLoading) {
+    return (
+      <PageContainer className="py-10 max-w-xl">
+        <p className="text-sm text-[#1a1d24]/60">Chargement du métier…</p>
+      </PageContainer>
+    );
+  }
 
   if (!job) {
     return (

@@ -1,3 +1,21 @@
+/**
+ * SEED ONLY.
+ *
+ * Ne pas importer depuis un composant ni une page. Utilise les hooks data
+ * (`usePrograms()` / `useProgram(id)` dans `src/hooks/data.ts`) qui passent
+ * par `/api/programs` → SQLite, avec fallback sur ces fixtures côté serveur
+ * si la DB est vide ou indisponible.
+ *
+ * Consommateurs autorisés :
+ *   - `apps/akjol_front/scripts/seed-fixtures.ts` (peuple la DB locale en dev)
+ *   - `apps/akjol_front/src/app/api/programs/route.ts` (fallback serveur)
+ *   - `apps/akjol_front/src/app/api/programs/[id]/route.ts` (fallback serveur)
+ *   - `apps/akjol_front/src/app/api/feasibility/route.ts` (fallback serveur)
+ *   - `engines/*` (planB, reverseRoutes — restent synchrones, OK)
+ *
+ * Toute autre référence depuis un composant client est un bug : la page ne
+ * verra jamais les ~60k formations ONISEP ingérées en DB.
+ */
 import type { Program } from "../types";
 
 export const PROGRAMS: Program[] = [

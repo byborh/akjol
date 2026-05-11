@@ -8,6 +8,7 @@ import { PassportFloat } from "../components/PassportFloat";
 import { CompareDrawer } from "../components/CompareDrawer";
 import { RehydrateStores } from "../components/RehydrateStores";
 import { IntlProvider } from "../components/IntlProvider";
+import { QueryProvider } from "../components/QueryProvider";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale, type Locale } from "../i18n/config";
 import { getMessagesFor } from "../i18n/getMessages";
 
@@ -36,12 +37,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         }}
       >
         <IntlProvider locale={locale} messages={messages}>
-          <RehydrateStores />
-          <AppNav />
-          <main className="pb-12">{children}</main>
-          <AppFooter />
-          <PassportFloat />
-          <CompareDrawer />
+          <QueryProvider>
+            <RehydrateStores />
+            <AppNav />
+            <main className="pb-12">{children}</main>
+            <AppFooter />
+            <PassportFloat />
+            <CompareDrawer />
+          </QueryProvider>
         </IntlProvider>
       </body>
     </html>

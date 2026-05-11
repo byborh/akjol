@@ -17,17 +17,19 @@ export function slugifySchool(name: string, city: string): string {
     .replace(/^-|-$/g, "");
 }
 
-let cache: SchoolEntry[] | null = null;
-
-export function getAllSchools(): SchoolEntry[] {
-  if (cache) return cache;
+/**
+ * Variante pure : dérive les écoles à partir d'un tableau de programmes
+ * arbitraire (utile quand programs vient d'une API/useQuery, pas du fichier
+ * statique). Pas de cache — recalcul à chaque appel ; le caller est censé
+ * memoiser via useMemo.
+ */
+export function getSchoolsFrom(programs: Program[]): SchoolEntry[] {
   const map = new Map<string, SchoolEntry>();
-  for (const p of PROGRAMS) {
+  for (const p of programs) {
     const id = slugifySchool(p.school.name, p.school.city);
     const existing = map.get(id);
     if (existing) {
       existing.programs.push(p);
-      // promote richer metadata if missing
       existing.rating = existing.rating ?? p.school.rating;
       existing.websiteUrl = existing.websiteUrl ?? p.school.websiteUrl;
       existing.jpoUrl = existing.jpoUrl ?? p.school.jpoUrl;
@@ -48,7 +50,14 @@ export function getAllSchools(): SchoolEntry[] {
       });
     }
   }
-  cache = Array.from(map.values()).sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  return Array.from(map.values()).sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+}
+
+let cache: SchoolEntry[] | null = null;
+
+/** Cache global pour les call sites qui consomment les fixtures statiques. */
+export function getAllSchools(): SchoolEntry[] {
+  if (!cache) cache = getSchoolsFrom(PROGRAMS);
   return cache;
 }
 
@@ -62,4 +71,8 @@ export function findSchoolByProgram(p: Program): SchoolEntry | undefined {
 
 export function getUniqueCities(): string[] {
   return Array.from(new Set(getAllSchools().map((s) => s.city))).sort();
+}
+
+export function getUniqueCitiesFrom(schools: SchoolEntry[]): string[] {
+  return Array.from(new Set(schools.map((s) => s.city))).sort();
 }
