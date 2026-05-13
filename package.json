@@ -13,6 +13,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:akjol": "drizzle-kit akjol",
     "seed": "tsx scripts/seed.ts",
+    "promote:curator": "tsx scripts/promote-curator.ts",
     "ingest": "pnpm --filter @akjol/ingest ingest",
     "ingest:onisep": "pnpm --filter @akjol/ingest ingest:onisep",
     "ingest:mon-master": "pnpm --filter @akjol/ingest ingest:mon-master",

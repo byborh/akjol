@@ -5,6 +5,7 @@ import { usePassportStore } from "../store/passport-store";
 import { useParcoursStore } from "../store/parcours-store";
 import { usePlanStore } from "../store/plan-store";
 import { useDocumentsStore } from "../store/documents-store";
+import { useEquivalencesStore } from "../store/equivalences-store";
 import { useSync } from "../hooks/useSync";
 
 export function RehydrateStores() {
@@ -19,6 +20,12 @@ export function RehydrateStores() {
       usePlanStore.persist.rehydrate(),
       useDocumentsStore.persist.rehydrate(),
     ]).then(() => setHydrated(true));
+  }, []);
+
+  // Les équivalences ne sont plus en localStorage : on les fetch depuis
+  // /api/equivalences à chaque démarrage. Public route → indépendant de l'auth.
+  useEffect(() => {
+    void useEquivalencesStore.getState().load();
   }, []);
 
   return hydrated ? <SyncManager /> : null;

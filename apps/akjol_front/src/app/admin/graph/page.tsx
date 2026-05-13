@@ -16,7 +16,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import Link from "next/link";
-import { Trash2, RotateCcw, History, Filter, Sparkles, ExternalLink } from "lucide-react";
+import { Trash2, RotateCcw, History, Filter, Sparkles, ExternalLink, ShieldCheck } from "lucide-react";
 import { DIPLOMAS } from "../../../data/diplomas";
 import { COUNTRIES } from "../../../data/countries";
 import {
@@ -24,6 +24,7 @@ import {
   type EquivalenceEdge,
   type EquivalenceKind,
 } from "../../../store/equivalences-store";
+import { useAuthStore } from "../../../store/auth-store";
 
 const KIND_COLOR: Record<EquivalenceKind, string> = {
   equivalent: "#3a6f2c",
@@ -100,10 +101,16 @@ function toRfEdges(edges: EquivalenceEdge[], visibleNodeIds: Set<string>): Edge[
 export default function AdminGraphPage() {
   const edges = useEquivalencesStore((s) => s.edges);
   const history = useEquivalencesStore((s) => s.history);
+  const lastError = useEquivalencesStore((s) => s.lastError);
   const add = useEquivalencesStore((s) => s.add);
   const update = useEquivalencesStore((s) => s.update);
   const remove = useEquivalencesStore((s) => s.remove);
   const reset = useEquivalencesStore((s) => s.reset);
+  const revert = useEquivalencesStore((s) => s.revert);
+  const loadRevisions = useEquivalencesStore((s) => s.loadRevisions);
+  const authUser = useAuthStore((s) => s.user);
+  const refreshAuth = useAuthStore((s) => s.refresh);
+  const authFetched = useAuthStore((s) => s.fetched);
 
   const [filterCountry, setFilterCountry] = useState<string>("ALL");
   const [filterLevel, setFilterLevel] = useState<string | null>(null);
@@ -115,6 +122,14 @@ export default function AdminGraphPage() {
     setNodes(buildInitialNodes(filterCountry, filterLevel));
   }, [filterCountry, filterLevel]);
 
+  useEffect(() => {
+    if (!authFetched) void refreshAuth();
+  }, [authFetched, refreshAuth]);
+
+  useEffect(() => {
+    if (showHistory) void loadRevisions();
+  }, [showHistory, loadRevisions]);
+
   const visibleNodeIds = useMemo(() => new Set(nodes.map((n) => n.id)), [nodes]);
   const rfEdges = useMemo(() => toRfEdges(edges, visibleNodeIds), [edges, visibleNodeIds]);
 
@@ -125,7 +140,7 @@ export default function AdminGraphPage() {
   const onConnect = useCallback(
     (c: Connection) => {
       if (!c.source || !c.target || c.source === c.target) return;
-      add({ from: c.source, to: c.target, kind: "acceptedAs", weight: 0.7 });
+      void add({ from: c.source, to: c.target, kind: "acceptedAs", weight: 0.7 });
     },
     [add],
   );
@@ -196,14 +211,26 @@ export default function AdminGraphPage() {
           </button>
           <button
             onClick={() => {
-              if (confirm("Réinitialiser aux équivalences seed ?")) reset();
+              if (confirm("Recharger les équivalences depuis la base ?")) void reset();
             }}
             className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-[#fafaf7] hover:bg-[#1a1d2410]"
           >
-            <RotateCcw size={12} /> Reset
+            <RotateCcw size={12} /> Recharger
           </button>
+          {authUser ? (
+            <div className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-[#3a6f2c]/10 text-[11px] text-[#3a6f2c]">
+              <ShieldCheck size={12} />
+              <span className="font-medium">{authUser.role ?? "student"}</span>
+              <span className="text-[#3a6f2c]/70">· {authUser.email}</span>
+            </div>
+          ) : null}
         </div>
       </div>
+      {lastError ? (
+        <div className="px-4 py-2 bg-[#d96565]/10 text-[12px] text-[#7e2929] border-b border-[#d96565]/30">
+          ⚠ {lastError}
+        </div>
+      ) : null}
 
       <div className="flex-1 relative">
         <ReactFlow
@@ -233,9 +260,11 @@ export default function AdminGraphPage() {
         {sel ? (
           <EdgeEditor
             edge={sel}
-            onChange={(patch) => update(sel.id, patch)}
+            onChange={(patch) => {
+              void update(sel.id, patch);
+            }}
             onDelete={() => {
-              remove(sel.id);
+              void remove(sel.id);
               setSelectedEdge(null);
             }}
             onClose={() => setSelectedEdge(null)}
@@ -243,7 +272,7 @@ export default function AdminGraphPage() {
         ) : null}
 
         {showHistory ? (
-          <div className="absolute right-3 top-3 w-[300px] max-h-[60vh] overflow-auto bg-white rounded-lg border border-black/5 shadow-lg p-3 text-[12px]">
+          <div className="absolute right-3 top-3 w-[340px] max-h-[60vh] overflow-auto bg-white rounded-lg border border-black/5 shadow-lg p-3 text-[12px]">
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium">Révisions</span>
               <button onClick={() => setShowHistory(false)} className="text-[#1a1d24]/50">
@@ -254,13 +283,17 @@ export default function AdminGraphPage() {
               <p className="text-[#1a1d24]/60">Aucune révision encore.</p>
             ) : (
               <ul className="space-y-1">
-                {history.map((h, i) => (
-                  <li key={i} className="flex items-center justify-between gap-2">
-                    <span className="text-[#1a1d24]/70 font-mono">
-                      {new Date(h.at).toLocaleString("fr-FR")}
+                {history.map((h) => (
+                  <li key={h.id} className="flex items-center justify-between gap-2">
+                    <span className="text-[#1a1d24]/70">
+                      <span className="font-mono text-[10px] uppercase mr-1">{h.action}</span>
+                      <span className="font-mono">{h.edgeId.slice(0, 6)}</span>
+                      <span className="text-[#1a1d24]/40 ml-1">
+                        {new Date(h.at).toLocaleString("fr-FR")}
+                      </span>
                     </span>
                     <button
-                      onClick={() => useEquivalencesStore.getState().revertTo(i)}
+                      onClick={() => void revert(h.id)}
                       className="text-[#ee7768] hover:underline"
                     >
                       Revert

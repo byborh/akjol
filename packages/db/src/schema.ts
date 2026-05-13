@@ -233,6 +233,58 @@ export const jobs = sqliteTable(
 );
 
 /**
+ * equivalence_edges : graphe des équivalences entre diplômes, édité par les
+ * curators sur /admin/graph. Source de vérité pour le moteur feasibility —
+ * lu par tout user, écrit uniquement par role=curator|admin.
+ *
+ * `from` / `to` sont des codes diplôme (cf. data/diplomas.ts), pas des FK
+ * vers une table — le référentiel des codes reste front-side pour l'instant.
+ */
+export const equivalenceEdges = sqliteTable(
+  "equivalence_edges",
+  {
+    id: text("id").primaryKey(),
+    from: text("from_code").notNull(),
+    to: text("to_code").notNull(),
+    kind: text("kind").notNull(), // "equivalent" | "acceptedAs" | "requiresBridge" | "notRecognized"
+    weight: integer("weight_x100").notNull().default(100), // 0..100, mappé 0..1 côté front
+    note: text("note"),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => ({
+    byFrom: index("equivalence_edges_from_idx").on(t.from),
+    byTo: index("equivalence_edges_to_idx").on(t.to),
+  }),
+);
+
+/**
+ * equivalence_revisions : log append-only des modifications du graphe.
+ * Permet le revert UI dans /admin/graph (History panel).
+ * `snapshotJson` contient l'état de l'arête AVANT l'action (pour create :
+ * null ; pour update : ancienne version ; pour delete : version supprimée).
+ */
+export const equivalenceRevisions = sqliteTable(
+  "equivalence_revisions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    edgeId: text("edge_id").notNull(),
+    action: text("action").notNull(), // "create" | "update" | "delete"
+    snapshotJson: text("snapshot_json"),
+    at: integer("at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    by: text("by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => ({
+    byEdge: index("equivalence_revisions_edge_idx").on(t.edgeId),
+    byAt: index("equivalence_revisions_at_idx").on(t.at),
+  }),
+);
+
+/**
  * ingestion_runs : journal des exécutions du pipeline d'ingestion.
  * Permet de comparer un run au précédent (diff detection) et d'auditer.
  */
@@ -267,3 +319,7 @@ export type UserPassport = typeof userPassports.$inferSelect;
 export type UserPlan = typeof userPlans.$inferSelect;
 export type UserParcours = typeof userParcours.$inferSelect;
 export type UserDocuments = typeof userDocuments.$inferSelect;
+export type EquivalenceEdgeRow = typeof equivalenceEdges.$inferSelect;
+export type EquivalenceEdgeInsert = typeof equivalenceEdges.$inferInsert;
+export type EquivalenceRevisionRow = typeof equivalenceRevisions.$inferSelect;
+export type EquivalenceRevisionInsert = typeof equivalenceRevisions.$inferInsert;

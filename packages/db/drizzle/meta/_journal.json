@@ -22,6 +22,13 @@
       "when": 1778529901719,
       "tag": "0002_blushing_kylun",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1778530905239,
+      "tag": "0003_ambitious_solo",
+      "breakpoints": true
     }
   ]
 }
