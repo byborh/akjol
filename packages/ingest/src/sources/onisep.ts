@@ -21,9 +21,12 @@ import { normalizeOnisepRow, type OnisepRow } from "../normalizers/onisep.js";
  * URL explicite (à pointer sur la "ressource principale" la plus récente du
  * dataset Idéo-Formations sur data.gouv.fr).
  */
+// Ressource principale du dataset "Idéo-Formations initiales en France"
+// (slug data.gouv : ideo-formations-initiales-en-france). UUID stable côté
+// data.gouv ; le précédent 9ce66cd1-… a été retiré (404).
 const DEFAULT_DATASET_URL =
   process.env.ONISEP_DATASET_URL ??
-  "https://www.data.gouv.fr/fr/datasets/r/9ce66cd1-8afe-4c7d-a1b6-5b3a3e7e3f5a";
+  "https://www.data.gouv.fr/fr/datasets/r/2442074c-07be-4a7a-bdcd-26ee31d0c290";
 
 export type OnisepAdapterOptions = {
   /** Chemin local du fichier CSV à parser. Si absent, on télécharge depuis `datasetUrl`. */

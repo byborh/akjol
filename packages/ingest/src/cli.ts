@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { createDb } from "@akjol/db";
 import { runIngestion } from "./upsert.js";
 import { createOnisepAdapter } from "./sources/onisep.js";
@@ -7,7 +9,9 @@ import { createUcasAdapter } from "./sources/ucas.js";
 import { createCommonAppAdapter } from "./sources/common-app.js";
 import type { SourceAdapter, RunStats } from "./types.js";
 
-const DB_PATH = process.env.AKJOL_DB ?? "./data/akjol.db";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// __dirname = packages/ingest/src → repo root = ../../..
+const DB_PATH = process.env.AKJOL_DB ?? resolve(__dirname, "../../../data/akjol.db");
 
 const HELP = `
 AkJol ingest CLI

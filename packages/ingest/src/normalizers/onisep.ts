@@ -123,14 +123,42 @@ function slugify(s: string): string {
 export type OnisepRow = Record<string, string | undefined>;
 
 export function normalizeOnisepRow(row: OnisepRow): NormalizedProgram | null {
-  const id = pick(row, ["identifiant", "identifiant_formation", "ideo_id", "id"]);
-  const libelle = pick(row, ["libelle", "libelle_formation", "libelle_type_formation"]);
-  const niveau = pick(row, ["niveau_de_sortie", "niveau", "niveau_formation"]);
-  const url = pick(row, ["url_formation", "url_et_id_onisep", "url"]);
+  // Le dataset "Idéo-Formations initiales en France" (data.gouv) liste les
+  // ~3 000 *types* de formations (pas les fiches établissement). Les colonnes
+  // sont à graphie française avec espaces/accents/slash. On gère aussi les
+  // anciens alias underscore au cas où une autre révision du dataset les
+  // utiliserait.
+  const url = pick(row, ["url et id onisep", "url_formation", "url_et_id_onisep", "url"]);
+  const rncp = pick(row, ["code rncp", "code_rncp"]);
+  // ID stable : slug FOR.xxxxx extrait de l'URL ONISEP si présent, sinon code
+  // RNCP, sinon hash du libellé.
+  const idFromUrl = url ? extractOnisepSlug(url) : null;
+  const id =
+    pick(row, ["identifiant", "identifiant_formation", "ideo_id", "id"]) ??
+    idFromUrl ??
+    (rncp ? `rncp${rncp}` : null);
+
+  const libelle =
+    pick(row, [
+      "libellé formation principal",
+      "libelle_formation_principal",
+      "libellé type formation",
+      "libelle_type_formation",
+      "libelle",
+      "libelle_formation",
+    ]);
+  const niveau = pick(row, [
+    "niveau de sortie indicatif",
+    "libellé niveau de certification",
+    "niveau_de_sortie",
+    "niveau",
+    "niveau_formation",
+  ]);
 
   if (!id || !libelle) return null;
 
-  const etabName = pick(row, ["nom", "etablissement_libelle", "etablissement", "uai"]);
+  const sigle = pick(row, ["sigle formation", "sigle_formation"]);
+  const etabName = sigle ?? pick(row, ["nom", "etablissement_libelle", "etablissement", "uai"]);
   const etabType = pick(row, ["type_etablissement", "tutelle"]);
   const ville = pick(row, ["commune", "ville", "ville_lib", "commune_lib"]) ?? "";
   const departement = pick(row, ["departement", "code_departement", "dep"]);
@@ -174,7 +202,9 @@ export function normalizeOnisepRow(row: OnisepRow): NormalizedProgram | null {
     minGrade: null,
 
     acceptedDiplomas: [],
-    domains: splitList(pick(row, ["domainesous-domaine", "domaines", "domaine"])),
+    domains: splitList(
+      pick(row, ["domaine/sous-domaine", "domainesous-domaine", "domaines", "domaine"]),
+    ),
     outcomesJobs: splitList(pick(row, ["debouches", "metiers"])),
     outcomesNextLevels: [],
     internationallyRecognizedIn: ["FR"],
@@ -199,4 +229,10 @@ function splitList(s: string | undefined): string[] {
     .split(/[;|,]/)
     .map((x) => x.trim())
     .filter(Boolean);
+}
+
+/** Extrait "FOR.6271" depuis "https://www.onisep.fr/…/slug/FOR.6271". */
+function extractOnisepSlug(url: string): string | null {
+  const m = url.match(/FOR\.(\d+)/);
+  return m ? `FOR.${m[1]}` : null;
 }
