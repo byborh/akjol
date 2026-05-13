@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
@@ -9,6 +9,7 @@ import { CompareDrawer } from "../components/CompareDrawer";
 import { RehydrateStores } from "../components/RehydrateStores";
 import { IntlProvider } from "../components/IntlProvider";
 import { QueryProvider } from "../components/QueryProvider";
+import { PlausibleScript } from "../components/PlausibleScript";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale, type Locale } from "../i18n/config";
 import { getMessagesFor } from "../i18n/getMessages";
 
@@ -18,6 +19,20 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", displ
 export const metadata: Metadata = {
   title: "AkJol — Routeur d'études",
   description: "Dis-moi où tu en es, je te montre toutes les vies possibles.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "AkJol",
+  appleWebApp: {
+    capable: true,
+    title: "AkJol",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FAFAF7",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,16 +51,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           fontFamily: "var(--font-sans), system-ui, sans-serif",
         }}
       >
+        <a href="#main-content" className="skip-link">
+          Aller au contenu principal
+        </a>
         <IntlProvider locale={locale} messages={messages}>
           <QueryProvider>
             <RehydrateStores />
             <AppNav />
-            <main className="pb-12">{children}</main>
+            <main id="main-content" tabIndex={-1} className="pb-12">
+              {children}
+            </main>
             <AppFooter />
             <PassportFloat />
             <CompareDrawer />
           </QueryProvider>
         </IntlProvider>
+        <PlausibleScript />
       </body>
     </html>
   );

@@ -1,0 +1,21 @@
+{
+  "name": "AkJol — Routeur d'études",
+  "short_name": "AkJol",
+  "description": "Dis-moi où tu en es, je te montre toutes les vies possibles.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF7",
+  "theme_color": "#FAFAF7",
+  "lang": "fr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

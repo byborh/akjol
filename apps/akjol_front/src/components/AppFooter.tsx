@@ -12,7 +12,7 @@ export function AppFooter() {
         <span>
           AkJol — {t("tagline")} · <span className="text-[#1a1d24]/40">v1.5</span>
         </span>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-x-4 gap-y-1 flex-wrap">
           <Link href="/methodologie" className="hover:text-[#1a1d24]">
             {t("methodology")}
           </Link>
@@ -21,6 +21,15 @@ export function AppFooter() {
           </Link>
           <Link href="/account" className="hover:text-[#1a1d24]">
             {t("account")}
+          </Link>
+          <Link href="/privacy" className="hover:text-[#1a1d24]">
+            {t("privacy")}
+          </Link>
+          <Link href="/terms" className="hover:text-[#1a1d24]">
+            {t("terms")}
+          </Link>
+          <Link href="/data" className="hover:text-[#1a1d24]">
+            {t("data")}
           </Link>
           <a
             href="https://github.com"
