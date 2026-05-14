@@ -135,8 +135,15 @@ export const programs = sqliteTable(
 );
 
 /**
- * users : 1 ligne par utilisateur connecté. L'auth crée la ligne au premier
- * login (upsert sur email). `role` sert au gating /admin (cf. Phase 3 doc).
+ * users : 1 ligne par utilisateur connecté.
+ *
+ * Auth (Phase 1 doc) : `provider` indique comment l'user s'est connecté ("password"
+ * ou "google"). `passwordHash` est le hash bcrypt (cost=10), null si l'user vient
+ * de Google. `googleId` est le sub OIDC, unique, null si l'user vient de
+ * password. `emailVerified` est mis à true automatiquement pour Google (OIDC
+ * garantit l'email), false par défaut pour password.
+ *
+ * `role` sert au gating /admin (cf. Phase 3 doc).
  */
 export const users = sqliteTable(
   "users",
@@ -145,6 +152,11 @@ export const users = sqliteTable(
     email: text("email").notNull().unique(),
     name: text("name").notNull(),
     role: text("role").notNull().default("student"), // "student" | "curator" | "admin"
+    provider: text("provider").notNull().default("password"), // "password" | "google"
+    passwordHash: text("password_hash"),
+    googleId: text("google_id").unique(),
+    emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+    avatarUrl: text("avatar_url"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
@@ -154,6 +166,7 @@ export const users = sqliteTable(
   },
   (t) => ({
     byEmail: index("users_email_idx").on(t.email),
+    byGoogleId: index("users_google_id_idx").on(t.googleId),
   }),
 );
 

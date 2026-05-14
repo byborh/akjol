@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { users } from "@akjol/db";
 import { encodeSession, isValidEmail, SESSION_COOKIE } from "../../../../lib/session";
-import { verifyPassword } from "../../../../lib/password";
+import { hashPassword, passwordPolicyError } from "../../../../lib/password";
 import { getDb } from "../../../../lib/db";
 
 const Body = z.object({
   email: z.string(),
   password: z.string(),
+  name: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -20,10 +22,14 @@ export async function POST(req: Request) {
   }
   const parsed = Body.safeParse(json);
   if (!parsed.success || !isValidEmail(parsed.data.email)) {
-    return NextResponse.json({ error: "Email ou mot de passe invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Email invalide." }, { status: 400 });
   }
   const email = parsed.data.email.trim().toLowerCase();
   const password = parsed.data.password;
+  const name = (parsed.data.name ?? "").trim() || email.split("@")[0];
+
+  const policyErr = passwordPolicyError(password);
+  if (policyErr) return NextResponse.json({ error: policyErr }, { status: 400 });
 
   const db = getDb();
   if (!db) {
@@ -34,30 +40,36 @@ export async function POST(req: Request) {
   }
 
   const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  const user = existing[0];
-
-  // Réponse générique pour ne pas révéler si l'email existe ou non.
-  if (!user || user.provider !== "password" || !user.passwordHash) {
-    return NextResponse.json({ error: "Email ou mot de passe invalide." }, { status: 401 });
+  if (existing[0]) {
+    return NextResponse.json(
+      { error: "Un compte existe déjà avec cet email." },
+      { status: 409 },
+    );
   }
 
-  const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) {
-    return NextResponse.json({ error: "Email ou mot de passe invalide." }, { status: 401 });
-  }
-
-  await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+  const passwordHash = await hashPassword(password);
+  const userId = nanoid(12);
+  await db.insert(users).values({
+    id: userId,
+    email,
+    name,
+    role: "student",
+    provider: "password",
+    passwordHash,
+    emailVerified: false,
+  });
 
   const token = encodeSession({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    role: (user.role as "student" | "curator" | "admin") ?? "student",
+    userId,
+    email,
+    name,
+    role: "student",
     iat: Math.floor(Date.now() / 1000),
   });
   const res = NextResponse.json({
     ok: true,
-    user: { email: user.email, name: user.name, userId: user.id },
+    requiresOnboarding: true,
+    user: { email, name, userId },
   });
   res.cookies.set(SESSION_COOKIE.name, token, SESSION_COOKIE.options);
   return res;

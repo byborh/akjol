@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { StepBar } from "../../components/StepBar";
@@ -10,6 +10,14 @@ import { CEFR_LEVELS, LANGUAGES, CERTIFICATES } from "../../data/languages";
 import { getDiplomasForCountry } from "../../data/diplomas";
 import { usePassportStore } from "../../store/passport-store";
 import type { CEFR, Passport } from "../../types";
+
+const EMPTY_PASSPORT: Passport = {
+  origin: { country: "", languages: [] },
+  currentDiploma: null,
+  certificates: [],
+  constraints: {},
+  aspiration: { domains: [], jobs: [], openToSurprise: true },
+};
 
 const TOTAL_STEPS = 5;
 
@@ -25,12 +33,35 @@ const DOMAINS = [
 ];
 
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingInner />
+    </Suspense>
+  );
+}
+
+function OnboardingInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const setPassport = usePassportStore((s) => s.setPassport);
+  const reset = usePassportStore((s) => s.reset);
   const initial = usePassportStore((s) => s.passport);
+  const isNewUser = params.get("newUser") === "1";
+
+  // Nouveau compte (signup Google ou password) : on wipe d'éventuelles
+  // données persona laissées en localStorage par une session anonyme
+  // précédente (ex: l'user avait cliqué « Tester comme Léa » avant de
+  // créer son compte).
+  useEffect(() => {
+    if (isNewUser) {
+      reset();
+    }
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [step, setStep] = useState(1);
-  const [draft, setDraft] = useState<Passport>(initial);
+  const [draft, setDraft] = useState<Passport>(isNewUser ? EMPTY_PASSPORT : initial);
 
   const canContinue = useMemo(() => {
     if (step === 1) return Boolean(draft.origin.country);
@@ -101,6 +132,16 @@ export default function OnboardingPage() {
 
   return (
     <PageContainer className="max-w-xl pt-6">
+      {step === 1 ? (
+        <div className="mb-6 rounded-xl bg-[#ee776810] border border-[#ee7768]/20 px-4 py-3">
+          <p className="text-sm text-[#1a1d24] leading-relaxed">
+            <strong className="text-[#a8463a]">Le passeport</strong>, c'est ton point de départ :
+            d'où tu viens, où tu en es, ce que tu veux. AkJol te montre les chemins possibles à
+            partir de là.
+          </p>
+        </div>
+      ) : null}
+
       <StepBar current={step} total={TOTAL_STEPS} />
       <div className="mt-2 flex items-center justify-between text-xs gap-3">
         <span className="text-[#1a1d24]/50">Étape {step} sur {TOTAL_STEPS}</span>
@@ -152,6 +193,15 @@ export default function OnboardingPage() {
         >
           {step < TOTAL_STEPS ? "Continuer" : "Voir mes possibilités"}
           <ArrowRight size={16} />
+        </button>
+      </div>
+
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => router.push("/explore")}
+          className="text-[12px] text-[#1a1d24]/45 hover:text-[#1a1d24]/70 hover:underline"
+        >
+          Passer pour l'instant — explorer sans passeport
         </button>
       </div>
     </PageContainer>
