@@ -3,6 +3,9 @@
 import { useMemo, use } from "react";
 import Link from "next/link";
 import { useRouter, notFound } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { formatCost, formatDate } from "../../../data/fxRates";
+import type { Locale } from "../../../i18n/config";
 import {
   ArrowLeft,
   ArrowRight,
@@ -38,15 +41,17 @@ import { VisaSection } from "../../../components/VisaSection";
 import { PlanBSection } from "../../../components/PlanBSection";
 import type { Program } from "../../../types";
 
-const PLATFORM_LABELS: Record<string, { name: string; url?: string }> = {
+const PLATFORM_LABELS: Record<string, { name: string; url?: string; directKey?: string }> = {
   parcoursup: { name: "Parcoursup", url: "https://www.parcoursup.gouv.fr" },
   mon_master: { name: "Mon Master", url: "https://www.monmaster.gouv.fr" },
   ucas: { name: "UCAS", url: "https://www.ucas.com" },
   common_app: { name: "Common App", url: "https://www.commonapp.org" },
-  direct: { name: "Candidature directe (école)" },
+  direct: { name: "", directKey: "platformDirect" },
 };
 
 export default function ProgramPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations("program");
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const mounted = useMounted();
   const { id } = use(params);
@@ -103,7 +108,7 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
         href="/explore"
         className="inline-flex items-center gap-1 text-sm text-[#1a1d24]/60 hover:text-[#1a1d24] mb-6"
       >
-        <ArrowLeft size={14} /> Retour à mes possibilités
+        <ArrowLeft size={14} /> {t("backToExplore")}
       </Link>
 
       <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1d24] to-[#2d3039] text-white p-7 mb-6">
@@ -126,16 +131,19 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 mt-5 text-[13px] text-white/80">
           <span className="inline-flex items-center gap-1.5">
-            <Clock size={14} /> {program.durationYears} an{program.durationYears > 1 ? "s" : ""}
+            <Clock size={14} /> {t("yearsSuffix", { years: program.durationYears })}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Languages size={14} /> {program.language.code.toUpperCase()} {program.language.minLevel}
           </span>
           <span className="inline-flex items-center gap-1.5" style={{ fontFamily: "var(--font-mono)" }}>
-            <Coins size={14} /> {program.costPerYear === 0 ? "Gratuit" : `${program.costPerYear.toLocaleString("fr-FR")} €/an`}
+            <Coins size={14} />{" "}
+            {program.costPerYear === 0
+              ? t("free")
+              : t("costPerYear", { value: formatCost(locale, program.costPerYear) })}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <MapPin size={14} /> {program.workStudy ? "Alternance possible" : "Présentiel"}
+            <MapPin size={14} /> {program.workStudy ? t("workStudyYes") : t("workStudyNo")}
           </span>
         </div>
       </div>
@@ -144,10 +152,10 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
         <div className="space-y-6 min-w-0">
           <ForYouSection feasibility={feasibility} />
 
-          <Section title="Comment postuler" icon={<Calendar size={18} />}>
+          <Section title={t("howApply")} icon={<Calendar size={18} />}>
             <div className="space-y-4">
-              <Step n={1} title="Plateforme">
-                {platform.name}
+              <Step n={1} title={t("platformStep")}>
+                {platform.directKey ? t(platform.directKey) : platform.name}
                 {platform.url ? (
                   <a
                     href={platform.url}
@@ -155,11 +163,11 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-[#ee7768] hover:underline ml-2 text-sm"
                   >
-                    site officiel <ExternalLink size={11} />
+                    {t("platformOfficial")} <ExternalLink size={11} />
                   </a>
                 ) : null}
               </Step>
-              <Step n={2} title="Pièces à préparer">
+              <Step n={2} title={t("documentsStep")}>
                 <ul className="space-y-1.5 mt-1">
                   {program.documents.map((d) => (
                     <li key={d} className="flex items-start gap-2 text-sm text-[#1a1d24]/80">
@@ -169,30 +177,32 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
                 </ul>
               </Step>
               {program.applicationOpens || program.applicationCloses ? (
-                <Step n={3} title="Deadlines">
+                <Step n={3} title={t("deadlinesStep")}>
                   <div className="flex gap-3 text-sm">
                     {program.applicationOpens ? (
                       <span className="px-2 py-1 rounded bg-[#a3cf9120] text-[#3a6f2c]">
-                        Ouvre {program.applicationOpens}
+                        {t("deadlineOpens", { date: formatDate(locale, program.applicationOpens) })}
                       </span>
                     ) : null}
                     {program.applicationCloses ? (
                       <span className="px-2 py-1 rounded bg-[#ee776820] text-[#a8463a]">
-                        Ferme {program.applicationCloses}
+                        {t("deadlineCloses", { date: formatDate(locale, program.applicationCloses) })}
                       </span>
                     ) : null}
                   </div>
                 </Step>
               ) : null}
               {program.applicationFee != null ? (
-                <Step n={4} title="Frais de candidature">
+                <Step n={4} title={t("appFeeStep")}>
                   <span style={{ fontFamily: "var(--font-mono)" }}>
-                    {program.applicationFee === 0 ? "Gratuit" : `${program.applicationFee} €`}
+                    {program.applicationFee === 0
+                      ? t("appFeeFree")
+                      : formatCost(locale, program.applicationFee)}
                   </span>
                 </Step>
               ) : null}
               {program.optionalSteps?.length ? (
-                <Step n={5} title="Étapes optionnelles">
+                <Step n={5} title={t("optionalStep")}>
                   <div className="flex flex-wrap gap-2">
                     {program.optionalSteps.map((s) => (
                       <span key={s} className="px-2 py-1 rounded-full bg-black/5 text-[12px]">
@@ -205,11 +215,11 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
             </div>
           </Section>
 
-          <Section title="Et après ?" icon={<Sparkles size={18} />}>
+          <Section title={t("afterTitle")} icon={<Sparkles size={18} />}>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <div className="text-[11px] uppercase tracking-wider text-[#1a1d24]/50 font-medium mb-2">
-                  Métiers typiques
+                  {t("typicalJobs")}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {program.outcomesJobs.map((label) => {
@@ -219,7 +229,7 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
                         key={label}
                         href={`/jobs/${matched.id}`}
                         className="px-2.5 py-1 rounded-full bg-[#ee776815] text-[#a8463a] text-[12px] hover:bg-[#ee776830] transition inline-flex items-center gap-1"
-                        title={`Voir la fiche métier "${matched.label}"`}
+                        title={t("viewJobLabel", { label: matched.label })}
                       >
                         {label} <ArrowRight size={10} />
                       </Link>
@@ -236,7 +246,7 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
               </div>
               <div>
                 <div className="text-[11px] uppercase tracking-wider text-[#1a1d24]/50 font-medium mb-2">
-                  Reconnu nativement dans
+                  {t("recognizedIn")}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {program.internationallyRecognizedIn.map((iso) => {
@@ -257,24 +267,27 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
           </Section>
 
           <Section
-            title={`« ${program.formationLabel} » est aussi enseignée par${otherSchoolsTeachingThisFormation.length > 0 ? "" : "..."}`}
+            title={
+              otherSchoolsTeachingThisFormation.length > 0
+                ? t("alsoTaughtBy", { formation: program.formationLabel })
+                : t("alsoTaughtByEmpty", { formation: program.formationLabel })
+            }
             icon={<Building2 size={18} />}
           >
             {otherSchoolsTeachingThisFormation.length === 0 ? (
               <p className="text-[12px] text-[#1a1d24]/55 leading-relaxed">
-                Pour l'instant, AkJol ne référence que <strong>{program.school.name}</strong> pour cette
-                formation. D'autres établissements la proposent probablement dans la vraie vie — on travaille à
-                les ajouter.
+                {t.rich("onlyHere", {
+                  school: program.school.name,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
             ) : (
               <>
                 <p className="text-[12px] text-[#1a1d24]/60 mb-3 leading-relaxed">
-                  <strong className="text-[#1a1d24]">{otherSchoolsTeachingThisFormation.length}</strong>{" "}
-                  autre{otherSchoolsTeachingThisFormation.length > 1 ? "s" : ""} établissement
-                  {otherSchoolsTeachingThisFormation.length > 1 ? "s" : ""} référencé
-                  {otherSchoolsTeachingThisFormation.length > 1 ? "s" : ""} dans AkJol enseigne
-                  {otherSchoolsTeachingThisFormation.length > 1 ? "nt" : ""} la même formation. Compare avant
-                  de candidater — frais, ville, durée, taux d'admission peuvent différer.
+                  {t.rich("alsoTaughtCount", {
+                    count: otherSchoolsTeachingThisFormation.length,
+                    strong: (chunks) => <strong className="text-[#1a1d24]">{chunks}</strong>,
+                  })}
                 </p>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {otherSchoolsTeachingThisFormation.map((sim) => {
@@ -299,10 +312,10 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
                           className="text-[10px] text-[#1a1d24]/55 mt-1"
                           style={{ fontFamily: "var(--font-mono)" }}
                         >
-                          {sim.durationYears} an{sim.durationYears > 1 ? "s" : ""} ·{" "}
+                          {t("yearsSuffix", { years: sim.durationYears })} ·{" "}
                           {sim.costPerYear === 0
-                            ? "Gratuit"
-                            : `${sim.costPerYear.toLocaleString("fr-FR")} €/an`}
+                            ? t("free")
+                            : t("costPerYear", { value: formatCost(locale, sim.costPerYear) })}
                         </div>
                       </Link>
                     );
@@ -337,9 +350,9 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
               onClick={continueFromHere}
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium text-white shadow-sm hover:shadow-md transition"
               style={{ background: "#ee7768" }}
-              title="Empile ce diplôme dans le voyage virtuel et explore la suite"
+              title={t("continueTooltip")}
             >
-              Continuer depuis ici <ArrowRight size={16} />
+              {t("continueFromHere")} <ArrowRight size={16} />
             </button>
           ) : null}
           <button
@@ -358,11 +371,11 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
           >
             {isSaved ? (
               <>
-                <BookmarkCheck size={14} /> Dans mon plan
+                <BookmarkCheck size={14} /> {t("inPlan")}
               </>
             ) : (
               <>
-                <BookmarkPlus size={14} /> Ajouter à mon plan
+                <BookmarkPlus size={14} /> {t("addToPlan")}
               </>
             )}
           </button>
@@ -375,18 +388,17 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
               color: inCompare ? "#a8463a" : "#1a1d24",
             }}
           >
-            {inCompare ? "Retirer du comparateur" : "Comparer avec…"}
+            {inCompare ? t("removeCompare") : t("addCompare")}
           </button>
           <Link
             href={`/school/${findSchoolByProgram(program)?.id ?? ""}`}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm border border-black/10 hover:border-[#ee7768] transition"
           >
-            <Building2 size={14} /> Visiter {program.school.name}
+            <Building2 size={14} /> {t("visitSchool", { school: program.school.name })}
           </Link>
           <div className="rounded-xl bg-white border border-black/5 p-4 text-[12px] text-[#1a1d24]/70 leading-relaxed">
-            <strong className="text-[#1a1d24]">Honnêteté épistémique.</strong> La probabilité affichée est
-            calculée à partir de ton passeport (ou du voyage virtuel courant) et de la base AkJol — elle est
-            toujours donnée avec son intervalle de confiance et la taille d'échantillon. <em>Pas de promesse.</em>
+            <strong className="text-[#1a1d24]">{t("epistemicTitle")}</strong>{" "}
+            {t.rich("epistemicBody", { em: (chunks) => <em>{chunks}</em> })}
           </div>
         </aside>
       </div>
@@ -396,15 +408,16 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
 }
 
 function ForYouSection({ feasibility }: { feasibility: ReturnType<typeof computeFeasibility> }) {
+  const t = useTranslations("program");
   return (
     <div className="rounded-2xl border-2 border-[#ee7768]/30 bg-gradient-to-br from-[#ee776808] to-transparent p-5">
       <div className="text-[11px] uppercase tracking-wider text-[#a8463a] font-semibold mb-3">
-        Pour toi · personnalisé à ton passeport
+        {t("forYouSection")}
       </div>
       <div className="grid sm:grid-cols-3 gap-4">
-        <Block title="Conditions remplies" tint="#a3cf91">
+        <Block title={t("conditionsMet")} tint="#a3cf91">
           {feasibility.conditions.met.length === 0 ? (
-            <li className="text-sm text-[#1a1d24]/50">Aucune pour l'instant.</li>
+            <li className="text-sm text-[#1a1d24]/50">{t("conditionsMetEmpty")}</li>
           ) : null}
           {feasibility.conditions.met.map((c, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-[#1a1d24]">
@@ -418,7 +431,7 @@ function ForYouSection({ feasibility }: { feasibility: ReturnType<typeof compute
           {feasibility.conditions.unmet.length > 0 ? (
             <li className="mt-3 pt-3 border-t border-black/5">
               <div className="text-[11px] uppercase tracking-wider text-[#7e2929] font-semibold mb-2">
-                Non remplies
+                {t("conditionsUnmet")}
               </div>
               {feasibility.conditions.unmet.map((c, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-[#1a1d24] mb-1">
@@ -435,7 +448,7 @@ function ForYouSection({ feasibility }: { feasibility: ReturnType<typeof compute
           ) : null}
         </Block>
 
-        <Block title="Suppositions / risques" tint="#f5b86a">
+        <Block title={t("assumptionsTitle")} tint="#f5b86a">
           {feasibility.assumptions.map((a, i) => (
             <li key={i} className="text-sm text-[#1a1d24]/80 leading-snug">
               {a.label}
@@ -443,7 +456,7 @@ function ForYouSection({ feasibility }: { feasibility: ReturnType<typeof compute
           ))}
         </Block>
 
-        <Block title="À compléter pour maximiser tes chances" tint="#ee7768">
+        <Block title={t("maximizeTitle")} tint="#ee7768">
           {feasibility.toMaximize.map((s, i) => (
             <li key={i} className="text-sm text-[#1a1d24]">
               <span className="font-medium">{s.label}</span>

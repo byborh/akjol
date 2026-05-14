@@ -3,6 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { LayoutGrid, Map as MapIcon, Search, Sparkles, X } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { SchoolCard } from "../../components/SchoolCard";
@@ -21,27 +22,53 @@ import type { Program, ProgramLevel } from "../../types";
 
 const SchoolMap = dynamic(() => import("../../components/SchoolMap"), {
   ssr: false,
-  loading: () => (
-    <div className="rounded-xl border border-black/5 bg-white h-[480px] flex items-center justify-center text-sm text-[#1a1d24]/50">
-      Chargement de la carte…
-    </div>
-  ),
+  loading: () => <MapLoader />,
 });
+
+function MapLoader() {
+  const t = useTranslations("catalog");
+  return (
+    <div className="rounded-xl border border-black/5 bg-white h-[480px] flex items-center justify-center text-sm text-[#1a1d24]/50">
+      {t("loadingMap")}
+    </div>
+  );
+}
 
 type ViewMode = "formations" | "schools";
 type SchoolDisplayMode = "list" | "map";
 
-const LEVELS: { code: ProgramLevel; label: string }[] = [
-  { code: "lycee", label: "Lycée / Prépa" },
-  { code: "licence", label: "Licence" },
-  { code: "licence_pro", label: "Licence pro" },
-  { code: "bachelor", label: "Bachelor" },
-  { code: "master", label: "Master" },
-  { code: "ecole_inge", label: "École d'ingé" },
-  { code: "doctorat", label: "Doctorat" },
+const LEVEL_CODES: ProgramLevel[] = [
+  "lycee",
+  "licence",
+  "licence_pro",
+  "bachelor",
+  "master",
+  "ecole_inge",
+  "doctorat",
 ];
 
-const DOMAINS = ["Tech", "Santé", "Sciences", "Industrie", "Affaires", "Arts", "Droit", "Sciences humaines"];
+const LEVEL_KEY: Record<ProgramLevel, string> = {
+  lycee: "levelLycee",
+  licence: "levelLicence",
+  licence_pro: "levelLicencePro",
+  bachelor: "levelBachelor",
+  master: "levelMaster",
+  ecole_inge: "levelEcoleInge",
+  doctorat: "levelDoctorat",
+  certif: "levelLicencePro",
+};
+
+const DOMAIN_VALUES = ["Tech", "Santé", "Sciences", "Industrie", "Affaires", "Arts", "Droit", "Sciences humaines"];
+const DOMAIN_KEY: Record<string, string> = {
+  Tech: "domainTech",
+  "Santé": "domainSante",
+  Sciences: "domainSciences",
+  Industrie: "domainIndustrie",
+  Affaires: "domainAffaires",
+  Arts: "domainArts",
+  Droit: "domainDroit",
+  "Sciences humaines": "domainSh",
+};
 
 function normalize(s: string): string {
   return s
@@ -59,6 +86,7 @@ export default function CatalogPage() {
 }
 
 function CatalogInner() {
+  const t = useTranslations("catalog");
   const mounted = useMounted();
   const passport = usePassportStore((s) => s.passport);
   const isComplete = usePassportStore((s) => s.isComplete());
@@ -123,12 +151,8 @@ function CatalogInner() {
   return (
     <PageContainer>
       <header className="mb-5">
-        <h1 className="text-3xl font-medium tracking-tight">Catalogue</h1>
-        <p className="text-sm text-[#1a1d24]/70 mt-1">
-          Visite toutes les formations et tous les établissements — sans simulation, sans pression. Le filtre
-          fonctionne dans les deux sens : choisis une formation pour voir les écoles qui la proposent, ou choisis
-          une école pour voir ses formations.
-        </p>
+        <h1 className="text-3xl font-medium tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-[#1a1d24]/70 mt-1">{t("subtitle")}</p>
       </header>
 
       <div className="inline-flex p-1 rounded-xl bg-black/5 mb-4">
@@ -141,7 +165,7 @@ function CatalogInner() {
             boxShadow: view === "formations" ? "0 1px 2px rgba(0,0,0,0.04)" : undefined,
           }}
         >
-          📚 Formations ({isLoading ? "…" : programs.length})
+          {t("tabFormations", { count: isLoading ? 0 : programs.length })}
         </button>
         <button
           onClick={() => setView("schools")}
@@ -152,7 +176,7 @@ function CatalogInner() {
             boxShadow: view === "schools" ? "0 1px 2px rgba(0,0,0,0.04)" : undefined,
           }}
         >
-          🏢 Établissements ({allSchools.length})
+          {t("tabSchools", { count: allSchools.length })}
         </button>
       </div>
 
@@ -163,11 +187,7 @@ function CatalogInner() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={
-                view === "formations"
-                  ? "Cherche une formation, un métier, une école…"
-                  : "Cherche un établissement, une ville…"
-              }
+              placeholder={view === "formations" ? t("searchFormations") : t("searchSchools")}
               className="w-full pl-9 pr-9 py-2.5 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-[#ee7768]"
             />
             {search ? (
@@ -185,7 +205,7 @@ function CatalogInner() {
             onChange={(e) => setCountry(e.target.value)}
             className="px-3 py-2.5 rounded-lg border border-black/10 bg-white text-sm"
           >
-            <option value="">Tous pays</option>
+            <option value="">{t("filterAllCountries")}</option>
             {COUNTRIES.map((c) => (
               <option key={c.code} value={c.code}>
                 {c.flag} {c.name}
@@ -198,10 +218,10 @@ function CatalogInner() {
             onChange={(e) => setLevel(e.target.value as ProgramLevel | "")}
             className="px-3 py-2.5 rounded-lg border border-black/10 bg-white text-sm"
           >
-            <option value="">Tous niveaux</option>
-            {LEVELS.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label}
+            <option value="">{t("filterAllLevels")}</option>
+            {LEVEL_CODES.map((code) => (
+              <option key={code} value={code}>
+                {t(LEVEL_KEY[code])}
               </option>
             ))}
           </select>
@@ -212,10 +232,10 @@ function CatalogInner() {
               onChange={(e) => setDomain(e.target.value)}
               className="px-3 py-2.5 rounded-lg border border-black/10 bg-white text-sm"
             >
-              <option value="">Tous domaines</option>
-              {DOMAINS.map((d) => (
+              <option value="">{t("filterAllDomains")}</option>
+              {DOMAIN_VALUES.map((d) => (
                 <option key={d} value={d}>
-                  {d}
+                  {t(DOMAIN_KEY[d])}
                 </option>
               ))}
             </select>
@@ -225,7 +245,7 @@ function CatalogInner() {
               onChange={(e) => setCity(e.target.value)}
               className="px-3 py-2.5 rounded-lg border border-black/10 bg-white text-sm"
             >
-              <option value="">Toutes villes</option>
+              <option value="">{t("filterAllCities")}</option>
               {allCities.map((c) => (
                 <option key={c} value={c}>
                   📍 {c}
@@ -237,17 +257,16 @@ function CatalogInner() {
 
         <div className="mt-3 text-[11px] text-[#1a1d24]/50">
           {view === "formations"
-            ? `${filteredFormations.length} formation${filteredFormations.length > 1 ? "s" : ""}`
-            : `${filteredSchools.length} établissement${filteredSchools.length > 1 ? "s" : ""}`}
+            ? t("countFormations", { count: filteredFormations.length })
+            : t("countSchools", { count: filteredSchools.length })}
           {effective ? (
             <span className="ml-2 inline-flex items-center gap-1">
               <Sparkles size={11} className="text-[#ee7768]" />
-              Les badges « match avec ton profil » apparaissent quand le programme est ouvert pour ton passeport
-              actuel.
+              {t("matchHint")}
             </span>
           ) : (
             <Link href="/onboarding" className="ml-2 text-[#ee7768] hover:underline">
-              Crée ton passeport pour voir les matches →
+              {t("createPassportHint")}
             </Link>
           )}
         </div>
@@ -256,7 +275,7 @@ function CatalogInner() {
       {view === "formations" ? (
         <div className="grid sm:grid-cols-2 gap-3">
           {filteredFormations.length === 0 ? (
-            <p className="text-sm text-[#1a1d24]/60">Aucune formation avec ces filtres.</p>
+            <p className="text-sm text-[#1a1d24]/60">{t("noFormations")}</p>
           ) : null}
           {filteredFormations.map((p) => (
             <CatalogProgramCard key={p.id} program={p} effective={effective} edges={equivEdges} />
@@ -274,7 +293,7 @@ function CatalogInner() {
                   color: schoolDisplay === "list" ? "#ee7768" : "#1a1d2480",
                 }}
               >
-                <LayoutGrid size={12} /> Liste
+                <LayoutGrid size={12} /> {t("viewList")}
               </button>
               <button
                 onClick={() => setSchoolDisplay("map")}
@@ -284,14 +303,11 @@ function CatalogInner() {
                   color: schoolDisplay === "map" ? "#ee7768" : "#1a1d2480",
                 }}
               >
-                <MapIcon size={12} /> Carte
+                <MapIcon size={12} /> {t("viewMap")}
               </button>
             </div>
             {schoolDisplay === "map" ? (
-              <span className="text-[11px] text-[#1a1d24]/50">
-                Cluster par ville · clic pour ouvrir une école · taille = nb de formations · vert = match avec
-                ton profil
-              </span>
+              <span className="text-[11px] text-[#1a1d24]/50">{t("mapLegend")}</span>
             ) : null}
           </div>
 
@@ -312,7 +328,7 @@ function CatalogInner() {
           ) : (
             <div className="grid sm:grid-cols-2 gap-3">
               {filteredSchools.length === 0 ? (
-                <p className="text-sm text-[#1a1d24]/60">Aucun établissement avec ces filtres.</p>
+                <p className="text-sm text-[#1a1d24]/60">{t("noSchools")}</p>
               ) : null}
               {filteredSchools.map((s) => {
                 const matchCount = effective
@@ -337,6 +353,7 @@ function CatalogProgramCard({
   effective: ReturnType<typeof applyTrajectory> | null;
   edges: EquivalenceEdge[];
 }) {
+  const t = useTranslations("catalog");
   const feasibility = effective ? computeFeasibility(effective, program, edges) : null;
   return (
     <Link
@@ -348,7 +365,7 @@ function CatalogProgramCard({
           <div className="flex items-center gap-2 mb-1 text-[11px]">
             {feasibility ? <StatusBadge status={feasibility.status} /> : (
               <span className="px-2 py-0.5 rounded-full bg-black/5 text-[#1a1d24]/60">
-                Pas de passeport — feasibility non calculée
+                {t("noFeasibility")}
               </span>
             )}
           </div>

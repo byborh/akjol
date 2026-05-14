@@ -53,6 +53,12 @@ export type SchoolMeta = {
   jpoUrl?: string;
   description?: string;
   type?: "université" | "grande école" | "lycée" | "IUT" | "école privée" | "autre";
+  address?: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  lat?: number;
+  lng?: number;
 };
 
 export type Program = {

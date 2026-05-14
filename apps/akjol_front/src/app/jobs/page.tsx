@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Briefcase, Search, X, MapPin, Coins, Activity, Sparkles } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { findCountry } from "../../data/countries";
@@ -9,7 +10,7 @@ import type { Job } from "../../data/jobs";
 import type { Program } from "../../types";
 import { useJobs, usePrograms } from "../../hooks/data";
 
-const DOMAINS = [
+const DOMAIN_VALUES = [
   "Tech",
   "Santé",
   "Sciences",
@@ -22,6 +23,20 @@ const DOMAINS = [
   "Conseil",
   "Management",
 ];
+
+const DOMAIN_KEY: Record<string, string> = {
+  Tech: "domainTech",
+  "Santé": "domainSante",
+  Sciences: "domainSciences",
+  Industrie: "domainIndustrie",
+  Affaires: "domainAffaires",
+  Arts: "domainArts",
+  Droit: "domainDroit",
+  "Sciences humaines": "domainSh",
+  Design: "domainDesign",
+  Conseil: "domainConseil",
+  Management: "domainManagement",
+};
 
 function normalize(s: string): string {
   return s
@@ -50,6 +65,7 @@ function formatSalary(s: { country: string; median: number; currency: string }):
 }
 
 export default function JobsPage() {
+  const t = useTranslations("jobs");
   const [search, setSearch] = useState("");
   const [domain, setDomain] = useState("");
 
@@ -73,12 +89,15 @@ export default function JobsPage() {
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
         <div>
           <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold mb-2">
-            <Briefcase size={12} /> Catalogue métiers
+            <Briefcase size={12} /> {t("tag")}
           </div>
-          <h1 className="text-3xl font-medium tracking-tight">Quel métier vises-tu ?</h1>
+          <h1 className="text-3xl font-medium tracking-tight">{t("title")}</h1>
           <p className="text-sm text-[#1a1d24]/70 mt-1">
-            <span className="font-semibold text-[#1a1d24]">{jobs.length}</span> métiers · clique pour
-            voir les <em>routes</em> depuis ton passeport actuel.
+            {t.rich("subtitle", {
+              n: jobs.length,
+              count: (chunks) => <span className="font-semibold text-[#1a1d24]">{chunks}</span>,
+              em: (chunks) => <em>{chunks}</em>,
+            })}
           </p>
         </div>
       </header>
@@ -92,14 +111,14 @@ export default function JobsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cherche un métier… (ex: Médecin, Data, Pentester)"
+            placeholder={t("searchPlaceholder")}
             className="w-full text-sm rounded-md border border-black/10 pl-9 pr-9 py-2 outline-none focus:border-[#ee7768]"
           />
           {search ? (
             <button
               onClick={() => setSearch("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1a1d24]/40 hover:text-[#1a1d24]"
-              aria-label="effacer la recherche"
+              aria-label={t("clearSearch")}
             >
               <X size={14} />
             </button>
@@ -116,9 +135,9 @@ export default function JobsPage() {
               border: "1px solid " + (domain === "" ? "#ee776840" : "transparent"),
             }}
           >
-            Tous les domaines
+            {t("allDomains")}
           </button>
-          {DOMAINS.map((d) => (
+          {DOMAIN_VALUES.map((d) => (
             <button
               key={d}
               onClick={() => setDomain(d === domain ? "" : d)}
@@ -129,14 +148,14 @@ export default function JobsPage() {
                 border: "1px solid " + (domain === d ? "#ee776840" : "transparent"),
               }}
             >
-              {d}
+              {t(DOMAIN_KEY[d])}
             </button>
           ))}
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-[#1a1d24]/60">Aucun métier avec ces filtres.</p>
+        <p className="text-sm text-[#1a1d24]/60">{t("noJobs")}</p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((job) => (
@@ -148,13 +167,14 @@ export default function JobsPage() {
       <div className="mt-10 rounded-xl bg-[#fcf6e8] border border-[#e6c068]/30 p-4 text-[12px] text-[#8a5314] flex items-start gap-2">
         <Sparkles size={13} className="mt-0.5 shrink-0" />
         <span>
-          <strong>Méthode.</strong> Les salaires médians sont sourcés (INSEE DADS, ONS UK, BLS US).
-          Le « risque d'automatisation » est une estimation indicative basée sur Frey-Osborne 2017
-          (n'est pas une prédiction). Voir{" "}
-          <Link href="/methodologie" className="underline">
-            méthodologie
-          </Link>
-          .
+          {t.rich("methodNote", {
+            strong: (chunks) => <strong>{chunks}</strong>,
+            link: (chunks) => (
+              <Link href="/methodologie" className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </span>
       </div>
     </PageContainer>
@@ -162,10 +182,19 @@ export default function JobsPage() {
 }
 
 function JobCard({ job, programs }: { job: Job; programs: Program[] }) {
+  const t = useTranslations("jobs");
   const frSalary = job.salary.find((s) => s.country === "FR");
   const otherSalaries = job.salary.filter((s) => s.country !== "FR");
   const programsCount = programsLeadingTo(job, programs);
   const automationPct = Math.round(job.riskAutomation * 100);
+  const automationLabel =
+    automationPct < 20
+      ? t("automationVeryLow")
+      : automationPct < 40
+        ? t("automationLow")
+        : automationPct < 60
+          ? t("automationModerate")
+          : t("automationHigh");
 
   return (
     <Link
@@ -183,7 +212,7 @@ function JobCard({ job, programs }: { job: Job; programs: Program[] }) {
                 key={d}
                 className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1a1d2408] text-[#1a1d24]/60 font-medium"
               >
-                {d}
+                {DOMAIN_KEY[d] ? t(DOMAIN_KEY[d]) : d}
               </span>
             ))}
           </div>
@@ -193,7 +222,7 @@ function JobCard({ job, programs }: { job: Job; programs: Program[] }) {
       <div className="grid grid-cols-2 gap-2 mt-3 text-[11px]">
         <div className="rounded-md bg-[#fafaf7] border border-black/5 px-2 py-1.5">
           <div className="text-[10px] text-[#1a1d24]/50 inline-flex items-center gap-1">
-            <Coins size={10} /> Salaire FR
+            <Coins size={10} /> {t("salaryFR")}
           </div>
           <div className="font-medium font-mono mt-0.5">
             {frSalary ? formatSalary(frSalary) : "—"}
@@ -206,13 +235,11 @@ function JobCard({ job, programs }: { job: Job; programs: Program[] }) {
         </div>
         <div className="rounded-md bg-[#fafaf7] border border-black/5 px-2 py-1.5">
           <div className="text-[10px] text-[#1a1d24]/50 inline-flex items-center gap-1">
-            <Activity size={10} /> Automation
+            <Activity size={10} /> {t("automation")}
           </div>
           <div className="font-medium mt-0.5">
             {automationPct}%
-            <span className="ml-1 text-[10px] text-[#1a1d24]/50">
-              {automationPct < 20 ? "très faible" : automationPct < 40 ? "faible" : automationPct < 60 ? "modéré" : "élevé"}
-            </span>
+            <span className="ml-1 text-[10px] text-[#1a1d24]/50">{automationLabel}</span>
           </div>
         </div>
       </div>
@@ -223,9 +250,7 @@ function JobCard({ job, programs }: { job: Job; programs: Program[] }) {
           {job.regionsTopHiring.length > 2 ? "…" : ""}
         </span>
         <span className="text-[#a8463a] font-medium">
-          {programsCount > 0
-            ? `${programsCount} formation${programsCount > 1 ? "s" : ""} →`
-            : "Voir routes →"}
+          {programsCount > 0 ? t("programsCountSuffix", { count: programsCount }) : t("viewRoutes")}
         </span>
       </div>
     </Link>

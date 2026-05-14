@@ -1,5 +1,6 @@
 import type { Program, SchoolMeta } from "../types";
 import { PROGRAMS } from "./programs";
+import { findSchoolDetail } from "./schoolDetails";
 
 export type SchoolEntry = SchoolMeta & {
   id: string;
@@ -36,6 +37,7 @@ export function getSchoolsFrom(programs: Program[]): SchoolEntry[] {
       existing.description = existing.description ?? p.school.description;
       existing.type = existing.type ?? p.school.type;
     } else {
+      const detail = findSchoolDetail(id);
       map.set(id, {
         id,
         name: p.school.name,
@@ -45,6 +47,12 @@ export function getSchoolsFrom(programs: Program[]): SchoolEntry[] {
         jpoUrl: p.school.jpoUrl,
         description: p.school.description,
         type: p.school.type,
+        address: detail?.address,
+        postalCode: detail?.postalCode,
+        phone: detail?.phone,
+        email: detail?.email,
+        lat: detail?.lat,
+        lng: detail?.lng,
         countryRef: p.countryRef,
         programs: [p],
       });

@@ -17,8 +17,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "AkJol — Routeur d'études",
-  description: "Dis-moi où tu en es, je te montre toutes les vies possibles.",
+  title: "AkJol — De ton diplôme à tes possibles, partout.",
+  description:
+    "AkJol est un routeur d'études : tu décris ton point de départ, on te montre toutes tes possibilités d'études, partout dans le monde, avec leurs conditions explicites.",
   manifest: "/manifest.webmanifest",
   applicationName: "AkJol",
   appleWebApp: {

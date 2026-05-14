@@ -3,12 +3,12 @@
 import { use, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import {
   ArrowLeft,
   Briefcase,
   Coins,
   Activity,
-  Clock,
   MapPin,
   GraduationCap,
   Sparkles,
@@ -25,20 +25,13 @@ import { useMounted } from "../../../hooks/useMounted";
 import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
 import { findProgram } from "../../../data/programs";
 import { useJob, useJobs, usePrograms } from "../../../hooks/data";
+import { formatCost } from "../../../data/fxRates";
+import type { Locale } from "../../../i18n/config";
 import type { Passport, TrajectoryStep } from "../../../types";
-
-const SAFE_AUTOMATION = 0.2;
 
 function formatSalary(s: { country: string; median: number; currency: string }): string {
   const sym = s.currency === "EUR" ? "€" : s.currency === "GBP" ? "£" : s.currency === "USD" ? "$" : s.currency;
   return `${s.median.toLocaleString("fr-FR")} ${sym}`;
-}
-
-function automationLabel(p: number): string {
-  if (p < 0.2) return "Très faible";
-  if (p < 0.4) return "Faible";
-  if (p < 0.6) return "Modéré";
-  return "Élevé";
 }
 
 function automationColor(p: number): string {
@@ -49,6 +42,8 @@ function automationColor(p: number): string {
 }
 
 export default function JobPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations("jobs");
+  const locale = useLocale() as Locale;
   const { id } = use(params);
   const router = useRouter();
   const mounted = useMounted();
@@ -96,7 +91,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   if (jobLoading) {
     return (
       <PageContainer className="py-10 max-w-xl">
-        <p className="text-sm text-[#1a1d24]/60">Chargement du métier…</p>
+        <p className="text-sm text-[#1a1d24]/60">{t("loadingJob")}</p>
       </PageContainer>
     );
   }
@@ -104,13 +99,13 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
   if (!job) {
     return (
       <PageContainer className="py-10 max-w-xl">
-        <h1 className="text-2xl font-medium tracking-tight">Métier introuvable</h1>
-        <p className="text-sm text-[#1a1d24]/70 mt-2">Aucun métier ne correspond à l'id <code>{id}</code>.</p>
+        <h1 className="text-2xl font-medium tracking-tight">{t("notFoundTitle")}</h1>
+        <p className="text-sm text-[#1a1d24]/70 mt-2">{t("notFoundBody", { id })}</p>
         <button
           onClick={() => router.push("/jobs")}
           className="mt-6 inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-[#ee7768] text-white"
         >
-          <ArrowLeft size={14} /> Retour au catalogue
+          <ArrowLeft size={14} /> {t("backToList")}
         </button>
       </PageContainer>
     );
@@ -118,6 +113,14 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
 
   const automationPct = Math.round(job.riskAutomation * 100);
   const frSalary = job.salary.find((s) => s.country === "FR");
+  const automationLabelText =
+    job.riskAutomation < 0.2
+      ? t("automationVery")
+      : job.riskAutomation < 0.4
+        ? t("automationLowCap")
+        : job.riskAutomation < 0.6
+          ? t("automationModerateCap")
+          : t("automationHighCap");
 
   return (
     <PageContainer>
@@ -125,12 +128,12 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
         href="/jobs"
         className="inline-flex items-center gap-1 text-sm text-[#1a1d24]/60 hover:text-[#1a1d24] mb-6"
       >
-        <ArrowLeft size={14} /> Retour au catalogue métiers
+        <ArrowLeft size={14} /> {t("backToJobs")}
       </Link>
 
       <div className="rounded-2xl bg-white border border-black/5 p-6 mb-6">
         <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold mb-2">
-          <Briefcase size={12} /> Métier · {job.code}
+          <Briefcase size={12} /> {t("headerKind", { code: job.code })}
         </div>
         <h1 className="text-3xl font-medium tracking-tight">{job.label}</h1>
         <div className="flex flex-wrap gap-1 mt-2">
@@ -147,27 +150,25 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
         <div className="grid sm:grid-cols-3 gap-3 mt-5">
           <div className="rounded-lg bg-[#fafaf7] border border-black/5 px-3 py-2.5">
             <div className="text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-medium inline-flex items-center gap-1">
-              <Coins size={10} /> Salaire médian FR
+              <Coins size={10} /> {t("salaryMedianFR")}
             </div>
             <div className="text-lg font-medium font-mono mt-0.5">
               {frSalary ? formatSalary(frSalary) : "—"}
-              <span className="text-[11px] text-[#1a1d24]/50 ml-1">/an brut</span>
+              <span className="text-[11px] text-[#1a1d24]/50 ml-1">{t("salaryPerYear")}</span>
             </div>
           </div>
           <div className="rounded-lg bg-[#fafaf7] border border-black/5 px-3 py-2.5">
             <div className="text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-medium inline-flex items-center gap-1">
-              <Activity size={10} /> Risque automation
+              <Activity size={10} /> {t("automationRisk")}
             </div>
             <div className="text-lg font-medium mt-0.5" style={{ color: automationColor(job.riskAutomation) }}>
               {automationPct}%
-              <span className="text-[11px] ml-1 font-normal">
-                {automationLabel(job.riskAutomation)}
-              </span>
+              <span className="text-[11px] ml-1 font-normal">{automationLabelText}</span>
             </div>
           </div>
           <div className="rounded-lg bg-[#fafaf7] border border-black/5 px-3 py-2.5">
             <div className="text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-medium inline-flex items-center gap-1">
-              <GraduationCap size={10} /> Niveaux requis
+              <GraduationCap size={10} /> {t("requiredLevels")}
             </div>
             <div className="text-sm font-medium mt-0.5">
               {job.requiresDiplomas.map((d) => d.replace("_", " ")).join(", ")}
@@ -198,60 +199,51 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
         <div className="space-y-6 min-w-0">
           <section className="rounded-xl bg-white border border-black/5 p-5">
             <h2 className="text-sm font-medium inline-flex items-center gap-2 mb-3">
-              <ListChecks size={14} className="text-[#ee7768]" /> Ce que tu fais au quotidien
+              <ListChecks size={14} className="text-[#ee7768]" /> {t("dailyTasks")}
             </h2>
             <ul className="space-y-1.5 text-sm text-[#1a1d24]/85">
-              {job.dailyTasks.map((t, i) => (
+              {job.dailyTasks.map((task, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ee7768] mt-0.5 shrink-0">·</span>
-                  <span>{t}</span>
+                  <span>{task}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-[11px] text-[#1a1d24]/50 italic">
-              Liste indicative — varie selon la séniorité, le secteur, l'employeur.
-            </p>
+            <p className="mt-3 text-[11px] text-[#1a1d24]/50 italic">{t("dailyTasksNote")}</p>
           </section>
 
           <section className="rounded-xl bg-white border border-black/5 p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-medium inline-flex items-center gap-2">
-                <Sparkles size={14} className="text-[#ee7768]" /> Routes vers ce métier
+                <Sparkles size={14} className="text-[#ee7768]" /> {t("routesTitle")}
               </h2>
               {effective ? (
-                <span className="text-[11px] text-[#1a1d24]/50">depuis ton passeport</span>
+                <span className="text-[11px] text-[#1a1d24]/50">{t("routesFromPassport")}</span>
               ) : (
-                <span className="text-[11px] text-[#1a1d24]/50">profil incomplet</span>
+                <span className="text-[11px] text-[#1a1d24]/50">{t("routesIncomplete")}</span>
               )}
             </div>
 
             {!mounted ? (
-              <p className="text-[12px] text-[#1a1d24]/50">Chargement…</p>
+              <p className="text-[12px] text-[#1a1d24]/50">{t("loadingShort")}</p>
             ) : !isComplete ? (
               <div className="rounded-lg bg-[#fafaf7] border border-black/5 p-4 text-[12px]">
-                <p className="text-[#1a1d24]/70">
-                  Construis ton passeport pour voir tes routes possibles depuis ton point de
-                  départ actuel.
-                </p>
+                <p className="text-[#1a1d24]/70">{t("buildPassportHint")}</p>
                 <Link
                   href="/onboarding"
                   className="mt-3 inline-flex items-center gap-1 text-[#ee7768] hover:underline font-medium"
                 >
-                  Construire mon passeport <ArrowRight size={12} />
+                  {t("buildPassportCta")} <ArrowRight size={12} />
                 </Link>
               </div>
             ) : trajectories.length === 0 ? (
-              <p className="text-[12px] text-[#1a1d24]/60">
-                Aucune route trouvée à 5 étapes max depuis ton passeport. Le métier exige
-                probablement un diplôme que tu n'as pas encore (ou un parcours non couvert
-                dans la base actuelle).
-              </p>
+              <p className="text-[12px] text-[#1a1d24]/60">{t("noRoutes")}</p>
             ) : (
               <div className="space-y-3">
-                {trajectories.map((t, i) => (
+                {trajectories.map((tr, i) => (
                   <TrajectoryRow
                     key={i}
-                    t={t}
+                    t={tr}
                     passport={effective ?? passport}
                     targetJobLabel={job.label}
                   />
@@ -262,13 +254,10 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
 
           <section className="rounded-xl bg-white border border-black/5 p-5">
             <h2 className="text-sm font-medium inline-flex items-center gap-2 mb-3">
-              <GraduationCap size={14} className="text-[#ee7768]" /> Formations qui mènent à ce métier
+              <GraduationCap size={14} className="text-[#ee7768]" /> {t("programsTitle")}
             </h2>
             {programsLeadingHere.length === 0 ? (
-              <p className="text-[12px] text-[#1a1d24]/60">
-                Aucun programme de la base actuelle ne liste explicitement {job.label} comme
-                débouché.
-              </p>
+              <p className="text-[12px] text-[#1a1d24]/60">{t("noProgramsForJob", { job: job.label })}</p>
             ) : (
               <ul className="space-y-2">
                 {programsLeadingHere.slice(0, 8).map((p) => (
@@ -286,8 +275,8 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
                         </div>
                         <div className="text-[11px] text-[#1a1d24]/60">
                           {p.school.name} · {p.school.city} ·{" "}
-                          {p.costPerYear === 0 ? "Gratuit" : `${p.costPerYear} €/an`} ·{" "}
-                          {p.durationYears} an{p.durationYears > 1 ? "s" : ""}
+                          {p.costPerYear === 0 ? "—" : formatCost(locale, p.costPerYear)} ·{" "}
+                          {p.durationYears}
                         </div>
                       </div>
                       <ArrowRight
@@ -305,7 +294,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
         <aside className="lg:sticky lg:top-20 self-start space-y-3">
           <section className="rounded-xl bg-white border border-black/5 p-4">
             <h3 className="text-[11px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold mb-2 inline-flex items-center gap-1">
-              <MapPin size={11} /> Régions qui recrutent
+              <MapPin size={11} /> {t("regionsHiring")}
             </h3>
             <ul className="text-sm text-[#1a1d24]/80 space-y-1">
               {job.regionsTopHiring.map((r) => (
@@ -317,7 +306,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
           {relatedJobs.length > 0 ? (
             <section className="rounded-xl bg-white border border-black/5 p-4">
               <h3 className="text-[11px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold mb-2">
-                Métiers proches
+                {t("relatedJobs")}
               </h3>
               <ul className="space-y-1.5">
                 {relatedJobs.map((rj) => (
@@ -336,12 +325,14 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
 
           <section className="rounded-xl bg-[#fcf6e8] border border-[#e6c068]/30 p-4">
             <p className="text-[11px] text-[#8a5314] leading-relaxed">
-              <strong>Sources.</strong> Salaires : INSEE DADS / ONS / BLS. Risque automation :
-              estimation Frey-Osborne 2017. Tâches : ROME (Pôle emploi). Détails sur{" "}
-              <Link href="/methodologie" className="underline">
-                /méthodologie
-              </Link>
-              .
+              {t.rich("sourcesNote", {
+                strong: (chunks) => <strong>{chunks}</strong>,
+                link: (chunks) => (
+                  <Link href="/methodologie" className="underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           </section>
         </aside>
@@ -351,8 +342,6 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
 }
 
 function routeStepToTrajectoryStep(s: RouteStep): TrajectoryStep {
-  // RouteStep (engine) n'a pas resultingDiplomaLabel/Level/yearsAdded directement
-  // exploitables. On retrouve le programme pour récupérer les champs manquants.
   const p = findProgram(s.programId);
   return {
     programId: s.programId,
@@ -373,15 +362,20 @@ function TrajectoryRow({
   passport: Passport;
   targetJobLabel: string;
 }) {
+  const tr = useTranslations("jobs");
+  const locale = useLocale() as Locale;
   const flags = t.countries.map((c) => findCountry(c)?.flag ?? "").filter(Boolean).join(" ");
   const tSteps = t.steps.map(routeStepToTrajectoryStep);
   return (
     <article className="rounded-lg border border-black/5 bg-[#fafaf7] p-3">
       <div className="text-[11px] text-[#1a1d24]/60 mb-2">
-        {flags} {t.steps.length} étape{t.steps.length > 1 ? "s" : ""} · {t.totalYears} an
-        {t.totalYears > 1 ? "s" : ""} ·{" "}
-        {t.totalCost === 0 ? "Gratuit" : `${t.totalCost.toLocaleString("fr-FR")} €`} · proba{" "}
-        {Math.round(t.joinedProbability * 100)}%
+        {tr("trajectorySummary", {
+          flags,
+          steps: t.steps.length,
+          years: t.totalYears,
+          cost: t.totalCost === 0 ? "—" : formatCost(locale, t.totalCost),
+          pct: Math.round(t.joinedProbability * 100),
+        })}
       </div>
       <TrajectoryFlow
         passport={passport}
