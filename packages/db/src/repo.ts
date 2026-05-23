@@ -1,6 +1,17 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Db } from "./index";
 import { programs, jobs, type ProgramRow, type JobRow } from "./schema";
+
+/**
+ * Options communes aux lectures de la table `programs`.
+ * Par défaut on n'expose que les fiches curées (`is_curated=true`) — les
+ * ingestions raw (ONISEP, etc.) servent uniquement de pool de candidats pour
+ * l'Admin et ne doivent jamais remonter aux utilisateurs.
+ */
+export type ProgramReadOptions = {
+  /** Si true, inclut aussi les fiches `is_curated=false`. Réservé à l'Admin. */
+  includeUncurated?: boolean;
+};
 
 /**
  * Fonctions de lecture utilisées par les routes API du front.
@@ -133,18 +144,36 @@ function rowToJob(r: JobRow): JobDto {
   };
 }
 
-export async function getAllPrograms(db: Db): Promise<ProgramDto[]> {
-  const rows = await db.select().from(programs).where(eq(programs.deprecated, false));
+export async function getAllPrograms(
+  db: Db,
+  opts: ProgramReadOptions = {},
+): Promise<ProgramDto[]> {
+  const where = opts.includeUncurated
+    ? eq(programs.deprecated, false)
+    : and(eq(programs.deprecated, false), eq(programs.isCurated, true));
+  const rows = await db.select().from(programs).where(where);
   return rows.map(rowToProgram);
 }
 
-export async function getProgramById(db: Db, id: string): Promise<ProgramDto | null> {
-  const rows = await db.select().from(programs).where(eq(programs.id, id)).limit(1);
+export async function getProgramById(
+  db: Db,
+  id: string,
+  opts: ProgramReadOptions = {},
+): Promise<ProgramDto | null> {
+  const where = opts.includeUncurated
+    ? eq(programs.id, id)
+    : and(eq(programs.id, id), eq(programs.isCurated, true));
+  const rows = await db.select().from(programs).where(where).limit(1);
   return rows[0] ? rowToProgram(rows[0]) : null;
 }
 
-export async function countPrograms(db: Db): Promise<number> {
-  const rows = await db.select().from(programs).limit(1);
+export async function countPrograms(
+  db: Db,
+  opts: ProgramReadOptions = {},
+): Promise<number> {
+  const where = opts.includeUncurated ? undefined : eq(programs.isCurated, true);
+  const q = db.select().from(programs);
+  const rows = await (where ? q.where(where).limit(1) : q.limit(1));
   return rows.length;
 }
 

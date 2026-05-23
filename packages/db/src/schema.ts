@@ -125,12 +125,56 @@ export const programs = sqliteTable(
     optionalSteps: text("optional_steps"),
     recommendsCertificate: text("recommends_certificate"),
     recommendsInternshipWeeks: integer("recommends_internship_weeks"),
+
+    // Curation
+    // `isCurated` distingue les fiches validées à la main (riches, fiables, utilisées
+    // par les engines feasibility / reverseRoutes / planB) des fiches brutes
+    // ingestées (ONISEP raw) qui servent uniquement de pool de candidats à curer
+    // dans /admin/programs.
+    isCurated: integer("is_curated", { mode: "boolean" }).notNull().default(false),
+    // Lien vers l'établissement réel (table schools, clé UAI). Null pour les
+    // fiches non encore associées à un établissement Annuaire Éducation.
+    schoolUai: text("school_uai"),
   },
   (t) => ({
     bySourceUnique: uniqueIndex("programs_source_sourceid_unique").on(t.source, t.sourceId),
     byCountry: index("programs_country_idx").on(t.countryRef),
     byLevel: index("programs_level_idx").on(t.level),
     bySource: index("programs_source_idx").on(t.source),
+    byCurated: index("programs_curated_idx").on(t.isCurated),
+    bySchoolUai: index("programs_school_uai_idx").on(t.schoolUai),
+  }),
+);
+
+/**
+ * schools : annuaire des établissements (lycées, IUT, universités, écoles).
+ * Clé primaire = code UAI (Unité Administrative Immatriculée), identifiant
+ * officiel français utilisé par l'Éducation Nationale, Parcoursup, Mon Master.
+ *
+ * Source initiale : Annuaire de l'Éducation (data.education.gouv.fr, licence
+ * Etalab) — ~67k établissements FR avec nom, ville, lat/lng, type.
+ * Import via `scripts/import-schools.ts`.
+ */
+export const schools = sqliteTable(
+  "schools",
+  {
+    uai: text("uai").primaryKey(),
+    name: text("name").notNull(),
+    city: text("city").notNull(),
+    postalCode: text("postal_code"),
+    region: text("region"),
+    lat: integer("lat_x1e6"), // latitude * 1e6, stockée en integer pour précision
+    lng: integer("lng_x1e6"), // longitude * 1e6
+    type: text("type"), // "lycée" | "iut" | "université" | "école_ingé" | etc.
+    websiteUrl: text("website_url"),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (t) => ({
+    byCity: index("schools_city_idx").on(t.city),
+    byType: index("schools_type_idx").on(t.type),
+    byName: index("schools_name_idx").on(t.name),
   }),
 );
 
@@ -336,3 +380,5 @@ export type EquivalenceEdgeRow = typeof equivalenceEdges.$inferSelect;
 export type EquivalenceEdgeInsert = typeof equivalenceEdges.$inferInsert;
 export type EquivalenceRevisionRow = typeof equivalenceRevisions.$inferSelect;
 export type EquivalenceRevisionInsert = typeof equivalenceRevisions.$inferInsert;
+export type SchoolRow = typeof schools.$inferSelect;
+export type SchoolInsert = typeof schools.$inferInsert;
