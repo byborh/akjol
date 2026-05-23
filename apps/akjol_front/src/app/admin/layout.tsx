@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldAlert, GitBranch, FileText } from "lucide-react";
+import { ShieldAlert, GitBranch, FileText, Table } from "lucide-react";
 
-const NAV = [
-  { href: "/admin/programs", label: "Programs", icon: FileText },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof FileText;
+  /** Sous-paths qui ne doivent PAS activer cette entrée (ex: /programs/batch ne doit pas activer Programs). */
+  excludePrefixes?: string[];
+};
+
+const NAV: NavItem[] = [
+  { href: "/admin/programs", label: "Programs", icon: FileText, excludePrefixes: ["/admin/programs/batch"] },
+  { href: "/admin/programs/batch", label: "Batch", icon: Table },
   { href: "/admin/graph", label: "Equivalences", icon: GitBranch },
 ];
 
@@ -21,8 +30,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
         </div>
         <nav className="flex items-center gap-1">
-          {NAV.map(({ href, label, icon: Icon }) => {
-            const active = pathname?.startsWith(href);
+          {NAV.map(({ href, label, icon: Icon, excludePrefixes }) => {
+            const active =
+              pathname?.startsWith(href) &&
+              !excludePrefixes?.some((ex) => pathname?.startsWith(ex));
             return (
               <Link
                 key={href}
