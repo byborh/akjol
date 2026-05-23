@@ -15,6 +15,7 @@
     "seed": "tsx scripts/seed.ts",
     "promote:curator": "tsx scripts/promote-curator.ts",
     "import:schools": "tsx scripts/import-schools.ts",
+    "seed:jobs-tech": "tsx scripts/seed-jobs-tech.ts",
     "ingest": "pnpm --filter @akjol/ingest ingest",
     "ingest:onisep": "pnpm --filter @akjol/ingest ingest:onisep",
     "ingest:mon-master": "pnpm --filter @akjol/ingest ingest:mon-master",

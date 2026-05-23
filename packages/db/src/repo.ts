@@ -322,6 +322,22 @@ export async function createProgramFromAdmin(
   db: Db,
   input: AdminProgramInput,
 ): Promise<AdminProgramRow> {
+  // Si l'input vient du pré-remplissage ONISEP, il porte source+sourceId d'une
+  // ligne raw existante. Plutôt qu'INSERT (UNIQUE constraint violation), on
+  // UPDATE la raw pour la promouvoir en curée — c'est le mental model attendu :
+  // « cette fiche ONISEP devient riche, elle reste la même ligne en DB ».
+  if (input.sourceId) {
+    const existing = await db
+      .select()
+      .from(programs)
+      .where(and(eq(programs.source, input.source), eq(programs.sourceId, input.sourceId)))
+      .limit(1);
+    if (existing[0]) {
+      const updated = await updateProgramFromAdmin(db, existing[0].id, input);
+      if (!updated) throw new Error("createProgramFromAdmin: promote failed");
+      return updated;
+    }
+  }
   const fallbackId = `manual-${slugify(input.title)}-${Date.now().toString(36)}`;
   const row = inputToRow(input, fallbackId);
   await db.insert(programs).values(row);
