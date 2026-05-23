@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getAllPrograms } from "@akjol/db";
 import { PROGRAMS, findProgram } from "../../../data/programs";
 import { computeFeasibility } from "../../../engine/feasibility";
-import type { Passport } from "../../../types";
+import { getDb } from "../../../lib/db";
+import type { Passport, Program } from "../../../types";
 
 const cefr = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
 
@@ -41,6 +43,25 @@ const Body = z.object({
   programIds: z.array(z.string()).optional(),
 });
 
+/**
+ * Charge les programs depuis la DB (filtre is_curated=true automatique via le
+ * repo). Fallback sur les fixtures bundle si la DB est indisponible ou vide —
+ * garantit que la démo tourne même sans `pnpm db:push` et que les 24 fixtures
+ * historiques restent un filet de sécurité tant qu'on n'a pas curé assez.
+ */
+async function loadPrograms(): Promise<Program[]> {
+  const db = getDb();
+  if (db) {
+    try {
+      const rows = await getAllPrograms(db);
+      if (rows.length > 0) return rows as unknown as Program[];
+    } catch (err) {
+      console.warn("[/api/feasibility] DB read failed, falling back to fixtures", err);
+    }
+  }
+  return PROGRAMS;
+}
+
 export async function POST(req: Request) {
   let json: unknown;
   try {
@@ -56,10 +77,17 @@ export async function POST(req: Request) {
     );
   }
   const { passport, programIds } = parsed.data;
-  const targets =
-    programIds && programIds.length > 0
-      ? programIds.map(findProgram).filter((p): p is NonNullable<ReturnType<typeof findProgram>> => Boolean(p))
-      : PROGRAMS;
+
+  const all = await loadPrograms();
+  let targets: Program[];
+  if (programIds && programIds.length > 0) {
+    const byId = new Map(all.map((p) => [p.id, p]));
+    targets = programIds
+      .map((id) => byId.get(id) ?? findProgram(id))
+      .filter((p): p is Program => Boolean(p));
+  } else {
+    targets = all;
+  }
 
   const items = targets.map((p) => ({
     programId: p.id,
