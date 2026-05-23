@@ -177,6 +177,218 @@ export async function countPrograms(
   return rows.length;
 }
 
+/**
+ * Vue Admin : tous les programs (curated + raw) avec les champs internes
+ * `isCurated`, `source`, `sourceId`, `sourceUrl`, `lastIngestedAt`, `schoolUai`.
+ * Ces champs sont volontairement absents de `ProgramDto` (vue publique).
+ */
+export type AdminProgramRow = ProgramDto & {
+  isCurated: boolean;
+  source: string;
+  sourceId: string;
+  sourceUrl: string | null;
+  lastIngestedAt: Date;
+  schoolUai: string | null;
+};
+
+function rowToAdminProgram(r: ProgramRow): AdminProgramRow {
+  return {
+    ...rowToProgram(r),
+    isCurated: r.isCurated,
+    source: r.source,
+    sourceId: r.sourceId,
+    sourceUrl: r.sourceUrl,
+    lastIngestedAt: r.lastIngestedAt,
+    schoolUai: r.schoolUai,
+  };
+}
+
+export async function getAllProgramsForAdmin(db: Db): Promise<AdminProgramRow[]> {
+  const rows = await db.select().from(programs).where(eq(programs.deprecated, false));
+  return rows.map(rowToAdminProgram);
+}
+
+export async function getProgramForAdminById(
+  db: Db,
+  id: string,
+): Promise<AdminProgramRow | null> {
+  const rows = await db.select().from(programs).where(eq(programs.id, id)).limit(1);
+  return rows[0] ? rowToAdminProgram(rows[0]) : null;
+}
+
+/**
+ * Création / mise à jour d'un program via l'Admin.
+ * Accepte un payload `AdminProgramInput` (champs métier + champs de provenance)
+ * et écrit en DB en sérialisant les listes/objets en text JSON.
+ */
+export type AdminProgramInput = {
+  id?: string;
+  source: string;
+  sourceId?: string;
+  sourceUrl?: string;
+  countryRef: string;
+  formationCode: string;
+  formationLabel: string;
+  title: string;
+  level: string;
+  durationYears: number;
+  description: string;
+  schoolName: string;
+  schoolCity: string;
+  schoolType?: string;
+  schoolWebsiteUrl?: string;
+  schoolUai?: string;
+  languageCode: string;
+  languageMinLevel: string;
+  costPerYear: number;
+  admissionPlatform: string;
+  applicationOpens?: string;
+  applicationCloses?: string;
+  applicationFee?: number;
+  workStudy: boolean;
+  resultingDiplomaCode: string;
+  resultingDiplomaLabel: string;
+  minGrade?: { value: number; scaleMax: number };
+  acceptedDiplomas: string[];
+  domains: string[];
+  outcomesJobs: string[];
+  outcomesNextLevels: string[];
+  internationallyRecognizedIn: string[];
+  documents: string[];
+  optionalSteps?: string[];
+  recommendsCertificate?: { code: string; minScore: number; gainPct: number };
+  recommendsInternshipWeeks?: number;
+  isCurated: boolean;
+};
+
+function inputToRow(input: AdminProgramInput, fallbackId: string) {
+  const finalId = input.id?.trim() || fallbackId;
+  const contentHash = `manual-${finalId}-${Date.now()}`;
+  return {
+    id: finalId,
+    source: input.source,
+    sourceId: input.sourceId ?? finalId,
+    sourceUrl: input.sourceUrl ?? null,
+    contentHash,
+    countryRef: input.countryRef,
+    formationCode: input.formationCode,
+    formationLabel: input.formationLabel,
+    title: input.title,
+    level: input.level,
+    durationYears: input.durationYears,
+    description: input.description,
+    schoolName: input.schoolName,
+    schoolCity: input.schoolCity,
+    schoolType: input.schoolType ?? null,
+    schoolWebsiteUrl: input.schoolWebsiteUrl ?? null,
+    schoolUai: input.schoolUai ?? null,
+    languageCode: input.languageCode,
+    languageMinLevel: input.languageMinLevel,
+    costPerYear: input.costPerYear,
+    admissionPlatform: input.admissionPlatform,
+    applicationOpens: input.applicationOpens ?? null,
+    applicationCloses: input.applicationCloses ?? null,
+    applicationFee: input.applicationFee ?? null,
+    workStudy: input.workStudy,
+    resultingDiplomaCode: input.resultingDiplomaCode,
+    resultingDiplomaLabel: input.resultingDiplomaLabel,
+    minGrade: input.minGrade ? JSON.stringify(input.minGrade) : null,
+    acceptedDiplomas: JSON.stringify(input.acceptedDiplomas),
+    domains: JSON.stringify(input.domains),
+    outcomesJobs: JSON.stringify(input.outcomesJobs),
+    outcomesNextLevels: JSON.stringify(input.outcomesNextLevels),
+    internationallyRecognizedIn: JSON.stringify(input.internationallyRecognizedIn),
+    documents: JSON.stringify(input.documents),
+    optionalSteps: input.optionalSteps ? JSON.stringify(input.optionalSteps) : null,
+    recommendsCertificate: input.recommendsCertificate
+      ? JSON.stringify(input.recommendsCertificate)
+      : null,
+    recommendsInternshipWeeks: input.recommendsInternshipWeeks ?? null,
+    isCurated: input.isCurated,
+  };
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 100);
+}
+
+export async function createProgramFromAdmin(
+  db: Db,
+  input: AdminProgramInput,
+): Promise<AdminProgramRow> {
+  const fallbackId = `manual-${slugify(input.title)}-${Date.now().toString(36)}`;
+  const row = inputToRow(input, fallbackId);
+  await db.insert(programs).values(row);
+  const created = await getProgramForAdminById(db, row.id);
+  if (!created) throw new Error("createProgramFromAdmin: row not found after insert");
+  return created;
+}
+
+export async function updateProgramFromAdmin(
+  db: Db,
+  id: string,
+  input: AdminProgramInput,
+): Promise<AdminProgramRow | null> {
+  const existing = await db.select().from(programs).where(eq(programs.id, id)).limit(1);
+  if (!existing[0]) return null;
+  const row = inputToRow({ ...input, id }, id);
+  // Conserve la provenance d'origine (source/sourceId) si non explicitement remplacée.
+  await db
+    .update(programs)
+    .set({
+      sourceUrl: row.sourceUrl,
+      countryRef: row.countryRef,
+      formationCode: row.formationCode,
+      formationLabel: row.formationLabel,
+      title: row.title,
+      level: row.level,
+      durationYears: row.durationYears,
+      description: row.description,
+      schoolName: row.schoolName,
+      schoolCity: row.schoolCity,
+      schoolType: row.schoolType,
+      schoolWebsiteUrl: row.schoolWebsiteUrl,
+      schoolUai: row.schoolUai,
+      languageCode: row.languageCode,
+      languageMinLevel: row.languageMinLevel,
+      costPerYear: row.costPerYear,
+      admissionPlatform: row.admissionPlatform,
+      applicationOpens: row.applicationOpens,
+      applicationCloses: row.applicationCloses,
+      applicationFee: row.applicationFee,
+      workStudy: row.workStudy,
+      resultingDiplomaCode: row.resultingDiplomaCode,
+      resultingDiplomaLabel: row.resultingDiplomaLabel,
+      minGrade: row.minGrade,
+      acceptedDiplomas: row.acceptedDiplomas,
+      domains: row.domains,
+      outcomesJobs: row.outcomesJobs,
+      outcomesNextLevels: row.outcomesNextLevels,
+      internationallyRecognizedIn: row.internationallyRecognizedIn,
+      documents: row.documents,
+      optionalSteps: row.optionalSteps,
+      recommendsCertificate: row.recommendsCertificate,
+      recommendsInternshipWeeks: row.recommendsInternshipWeeks,
+      isCurated: row.isCurated,
+      contentHash: row.contentHash,
+    })
+    .where(eq(programs.id, id));
+  return getProgramForAdminById(db, id);
+}
+
+export async function deleteProgramFromAdmin(db: Db, id: string): Promise<boolean> {
+  const existing = await db.select().from(programs).where(eq(programs.id, id)).limit(1);
+  if (!existing[0]) return false;
+  await db.delete(programs).where(eq(programs.id, id));
+  return true;
+}
+
 export async function getAllJobs(db: Db): Promise<JobDto[]> {
   const rows = await db.select().from(jobs);
   return rows.map(rowToJob);
