@@ -16,7 +16,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ uai: string }>
 }
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ uai: string }> }) {
-  const auth = await requireCurator();
+  const auth = await requireCurator(req);
   if (!auth.ok) return auth.response;
   const { uai } = await ctx.params;
   const db = getDb();
@@ -36,8 +36,8 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ uai: string }
   return NextResponse.json({ school: updated });
 }
 
-export async function DELETE(_req: Request, ctx: { params: Promise<{ uai: string }> }) {
-  const auth = await requireCurator();
+export async function DELETE(req: Request, ctx: { params: Promise<{ uai: string }> }) {
+  const auth = await requireCurator(req);
   if (!auth.ok) return auth.response;
   const { uai } = await ctx.params;
   const db = getDb();

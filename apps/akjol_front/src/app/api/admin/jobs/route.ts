@@ -14,7 +14,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireCurator();
+  const auth = await requireCurator(req);
   if (!auth.ok) return auth.response;
   const db = getDb();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });

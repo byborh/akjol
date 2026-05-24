@@ -22,7 +22,7 @@ export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireCurator();
+  const auth = await requireCurator(req);
   if (!auth.ok) return auth.response;
   const { id } = await ctx.params;
   const db = getDb();
@@ -47,10 +47,10 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireCurator();
+  const auth = await requireCurator(req);
   if (!auth.ok) return auth.response;
   const { id } = await ctx.params;
   const db = getDb();

@@ -92,10 +92,10 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 
 - [ ] **A01 Broken Access Control** : revue des routes `/admin/*` et `/api/admin/*` — middleware `requireCurator` partout (déjà fait, à valider) · vérifier qu'aucune route API ne contourne le check
 - [x] **A02 Cryptographic Failures** : password hash `argon2` ou `bcrypt` (déjà bcrypt ?) — vérifier coût ≥ 12 — *bcrypt cost bumped 10 → 12 dans `src/lib/password.ts`*
-- [ ] **A03 Injection** : Drizzle protège déjà du SQL injection · vérifier que les inputs sortie HTML sont escapés (React le fait, mais `dangerouslySetInnerHTML` ?)
+- [x] **A03 Injection** : Drizzle protège déjà du SQL injection · vérifier que les inputs sortie HTML sont escapés (React le fait, mais `dangerouslySetInnerHTML` ?) — *grep : 0 occurrence de `dangerouslySetInnerHTML` dans `src/`. React échappe le reste*
 - [ ] **A04 Insecure Design** : threat modeling rapide → quels parcours utilisateur escaladent les privilèges ?
 - [x] **A05 Security Misconfiguration** : headers HTTP (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) — *configurés dans `next.config.ts`, HSTS activé en prod uniquement*
-- [ ] **A06 Vulnerable Components** : `pnpm audit` régulier · process pour patcher les CVE critiques < 7 jours
+- [x] **A06 Vulnerable Components** : `pnpm audit` régulier · process pour patcher les CVE critiques < 7 jours — *audit fait : Next 16.2.4 → 16.2.6 (8 high patchés). Reste 2 CVE non-exploitables ici (drizzle-orm 0.36 demande `sql.identifier` user-input qu'on n'utilise pas ; postcss bundled traite uniquement Tailwind statique). Migration drizzle 0.36 → 0.45 à planifier séparément.*
 - [x] **A07 Identification & Auth Failures** : MFA optionnel pour curator/admin · limite tentatives login (rate limit) — *rate-limit login fait ; MFA encore à faire*
 - [ ] **A08 Data Integrity Failures** : signatures CSRF si on accepte des POST hors fetch local
 - [x] **A09 Logging Failures** : logs Pino sans PII (vérifier que email/password n'apparaissent pas dans les logs) · pas de stack traces en prod — *grep manuel : aucun `console.*(password|email|hash)` dans `src/`*
@@ -104,11 +104,11 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 ### 2.2 Rate-limiting
 
 - [x] Choisir : `@upstash/ratelimit` (Redis) ou middleware Next custom avec mémoire (process-local) — *retenu : in-memory process-local (`src/lib/rate-limit.ts`). À migrer sur Upstash quand on passera sur Vercel Pro multi-instance.*
-- [ ] Endpoints à protéger :
+- [x] Endpoints à protéger :
   - [x] `POST /api/auth/login` : 5 tentatives / 15 min / IP
   - [x] `POST /api/auth/register` : 3 / heure / IP — *appliqué sur `/api/auth/signup` (= signup, pas register)*
-  - [ ] `POST /api/admin/*` : 60 / minute / userId
-  - [ ] `GET /api/*` (lecture) : 300 / minute / IP
+  - [x] `POST /api/admin/*` : 60 / minute / userId — *centralisé dans `requireCurator(req)` ; tous les POST/PATCH/DELETE admin couverts*
+  - [x] `GET /api/*` (lecture) : 300 / minute / IP — *appliqué dans `src/middleware.ts` (Edge) ; testé : 297 req OK puis 429*
   - [x] `POST /api/feasibility` : 60 / minute / userId — *clé sur IP pour l'instant (endpoint utilisable sans auth)*
 - [x] Tester avec un script (genre `curl` en boucle) que le 429 sort bien — *vérifié : 6e appel login → 429 avec header `Retry-After`*
 
