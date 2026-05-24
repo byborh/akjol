@@ -6,6 +6,7 @@ import { users } from "@akjol/db";
 import { encodeSession, isValidEmail, SESSION_COOKIE } from "../../../../lib/session";
 import { hashPassword, passwordPolicyError } from "../../../../lib/password";
 import { getDb } from "../../../../lib/db";
+import { clientIp, rateLimitResponse } from "../../../../lib/rate-limit";
 
 const Body = z.object({
   email: z.string(),
@@ -14,6 +15,9 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
+  const limited = rateLimitResponse(`signup:${clientIp(req)}`, 3, 60 * 60_000);
+  if (limited) return limited;
+
   let json: unknown;
   try {
     json = await req.json();

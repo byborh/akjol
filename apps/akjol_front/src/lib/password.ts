@@ -1,8 +1,12 @@
 import bcrypt from "bcryptjs";
 
-const COST = 10;
+// Coût 12 = recommandé OWASP 2024 pour bcrypt (≈250ms sur CPU moderne).
+// Si jamais on remonte à 14+, prévoir d'absorber +1s sur login — pas
+// trivial avec les anciens hash en BD : `bcrypt.compare` détecte le coût
+// stocké dans le hash, donc bump indolore pour les comptes existants.
+const COST = 12;
 
-/** Hash un mot de passe en clair. Coût bcrypt = 10 (équilibre prod/dev OK). */
+/** Hash un mot de passe en clair. */
 export async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, COST);
 }

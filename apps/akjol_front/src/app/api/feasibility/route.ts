@@ -4,6 +4,7 @@ import { getAllPrograms } from "@akjol/db";
 import { PROGRAMS, findProgram } from "../../../data/programs";
 import { computeFeasibility } from "../../../engine/feasibility";
 import { getDb } from "../../../lib/db";
+import { clientIp, rateLimitResponse } from "../../../lib/rate-limit";
 import type { Passport, Program } from "../../../types";
 
 const cefr = z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]);
@@ -63,6 +64,9 @@ async function loadPrograms(): Promise<Program[]> {
 }
 
 export async function POST(req: Request) {
+  const limited = rateLimitResponse(`feasibility:${clientIp(req)}`, 60, 60_000);
+  if (limited) return limited;
+
   let json: unknown;
   try {
     json = await req.json();
