@@ -32,12 +32,14 @@ export default async function AdminJobsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-600 text-[11px] uppercase tracking-wider">
             <tr>
-              <th className="px-3 py-2 text-left w-32">Code</th>
-              <th className="px-3 py-2 text-left">Libellé</th>
-              <th className="px-3 py-2 text-left">Domaines</th>
-              <th className="px-3 py-2 text-left w-24">Salaire</th>
-              <th className="px-3 py-2 text-left w-16">Risque IA</th>
-              <th className="px-3 py-2 text-right w-16"></th>
+              <th scope="col" className="px-3 py-2 text-left w-32">Code</th>
+              <th scope="col" className="px-3 py-2 text-left">Libellé</th>
+              <th scope="col" className="px-3 py-2 text-left">Domaines</th>
+              <th scope="col" className="px-3 py-2 text-left w-24">Salaire</th>
+              <th scope="col" className="px-3 py-2 text-left w-16">Risque IA</th>
+              <th scope="col" className="px-3 py-2 text-right w-16">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>

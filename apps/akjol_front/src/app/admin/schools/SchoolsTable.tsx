@@ -68,12 +68,14 @@ export function SchoolsTable({ schools }: { schools: AdminSchoolRow[] }) {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-600 text-[11px] uppercase tracking-wider">
             <tr>
-              <th className="px-3 py-2 text-left w-28">UAI</th>
-              <th className="px-3 py-2 text-left">Nom</th>
-              <th className="px-3 py-2 text-left">Ville</th>
-              <th className="px-3 py-2 text-left w-24">Type</th>
-              <th className="px-3 py-2 text-left w-40">Région</th>
-              <th className="px-3 py-2 text-right w-16"></th>
+              <th scope="col" className="px-3 py-2 text-left w-28">UAI</th>
+              <th scope="col" className="px-3 py-2 text-left">Nom</th>
+              <th scope="col" className="px-3 py-2 text-left">Ville</th>
+              <th scope="col" className="px-3 py-2 text-left w-24">Type</th>
+              <th scope="col" className="px-3 py-2 text-left w-40">Région</th>
+              <th scope="col" className="px-3 py-2 text-right w-16">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>

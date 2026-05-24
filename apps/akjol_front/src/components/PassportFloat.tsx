@@ -24,7 +24,7 @@ export function PassportFloat() {
           {passport.currentDiploma?.label ?? "Profil incomplet"}
         </span>
       </div>
-      <Pencil size={14} className="text-[#1a1d24]/40 group-hover:text-[#ee7768]" />
+      <Pencil size={14} aria-hidden="true" className="text-[#1a1d24]/40 group-hover:text-[#ee7768]" />
     </Link>
   );
 }

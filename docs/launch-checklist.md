@@ -29,8 +29,8 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
   - [ ] Droit de rétractation 14 jours sur achats
   - [ ] Limitation de responsabilité (on n'est pas un conseiller d'orientation agréé)
   - [ ] Conditions de résiliation et suppression du compte
-- [ ] Publication URL `/terms` (la page existe déjà : `apps/akjol_front/src/app/terms`)
-- [ ] Lien CGU au pied de page + à l'inscription (checkbox de consentement)
+- [ ] Publication URL `/terms` (la page existe déjà : `apps/akjol_front/src/app/terms`) — *page existe, contenu à valider avec avocat avant launch public*
+- [x] Lien CGU au pied de page + à l'inscription (checkbox de consentement) — *footer OK + checkbox required au signup, gate serveur refuse si `acceptTerms=false`. Testé : 400.*
 
 ### 1.2 Politique de confidentialité
 
@@ -51,8 +51,8 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 
 **⚠️ Le plus sensible techniquement. La majorité de ta cible (lycéens 16-18) est OK, mais les visiteurs 11-14 ans (parcours d'orientation précoce) déclenchent l'Art. 8 RGPD.**
 
-- [ ] Décider : soit on bloque les < 15 ans, soit on implémente le double consentement
-- [ ] **Option A (bloquer)** : champ "Âge" obligatoire à l'inscription, refus si < 15
+- [x] Décider : soit on bloque les < 15 ans, soit on implémente le double consentement — *retenu : Option A (bloquer). Option B à venir si on ouvre la cible 11-14 ans avec parental consent.*
+- [x] **Option A (bloquer)** : champ "Âge" obligatoire à l'inscription, refus si < 15 — *champ "Année de naissance" + gate serveur `MIN_AGE_YEARS = 15` dans `/api/auth/signup`. L'année n'est pas stockée (minimisation RGPD). Testé : 403 si < 15.*
 - [ ] **Option B (double consentement)** :
   - [ ] À l'inscription, déclaration d'âge
   - [ ] Si < 15 : demande de l'email du parent
@@ -65,13 +65,13 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 
 ### 1.4 Mentions légales
 
-- [ ] Page `/mentions-legales` (à créer)
-- [ ] Identité de l'éditeur : nom, statut juridique, RCS, SIREN, capital social, siège
-- [ ] Directeur de publication (toi)
-- [ ] Hébergeur : nom + adresse + téléphone (Vercel : 440 N Wolfe Road, Sunnyvale, CA)
-- [ ] Contact (email obligatoire : `contact@akjol.fr`)
+- [x] Page `/mentions-legales` (à créer) — *créée avec squelette + placeholders `À COMPLÉTER` pour les champs qui dépendent de la SASU*
+- [ ] Identité de l'éditeur : nom, statut juridique, RCS, SIREN, capital social, siège — *placeholders en place, à remplir une fois SASU immatriculée*
+- [ ] Directeur de publication (toi) — *placeholder à remplir*
+- [x] Hébergeur : nom + adresse + téléphone (Vercel : 440 N Wolfe Road, Sunnyvale, CA) — *renseigné, avec mention Neon pour la BD*
+- [x] Contact (email obligatoire : `contact@akjol.fr`) — *email contact@akjol.app utilisé partout, à activer côté DNS*
 - [ ] Numéro CNIL si nécessaire (déclaration ou DPO désigné)
-- [ ] Lien depuis le footer site
+- [x] Lien depuis le footer site — *ajouté dans AppFooter avec clé i18n `mentions` (fr + en)*
 
 ### 1.5 Structure juridique préalable
 
@@ -90,14 +90,14 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 
 ### 2.1 Audit OWASP Top 10 minimal
 
-- [ ] **A01 Broken Access Control** : revue des routes `/admin/*` et `/api/admin/*` — middleware `requireCurator` partout (déjà fait, à valider) · vérifier qu'aucune route API ne contourne le check
+- [x] **A01 Broken Access Control** : revue des routes `/admin/*` et `/api/admin/*` — middleware `requireCurator` partout (déjà fait, à valider) · vérifier qu'aucune route API ne contourne le check — *grep des 17 sites d'appel de `requireCurator()` validé ; double-gate middleware Edge sur `/admin/*` + `requireCurator` sur `/api/admin/*` (defense in depth). Threat model documenté dans `docs/security.md`.*
 - [x] **A02 Cryptographic Failures** : password hash `argon2` ou `bcrypt` (déjà bcrypt ?) — vérifier coût ≥ 12 — *bcrypt cost bumped 10 → 12 dans `src/lib/password.ts`*
 - [x] **A03 Injection** : Drizzle protège déjà du SQL injection · vérifier que les inputs sortie HTML sont escapés (React le fait, mais `dangerouslySetInnerHTML` ?) — *grep : 0 occurrence de `dangerouslySetInnerHTML` dans `src/`. React échappe le reste*
-- [ ] **A04 Insecure Design** : threat modeling rapide → quels parcours utilisateur escaladent les privilèges ?
+- [x] **A04 Insecure Design** : threat modeling rapide → quels parcours utilisateur escaladent les privilèges ? — *écrit dans `docs/security.md` §1 : acteurs, surfaces, parcours d'escalation, risques résiduels acceptés*
 - [x] **A05 Security Misconfiguration** : headers HTTP (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) — *configurés dans `next.config.ts`, HSTS activé en prod uniquement*
 - [x] **A06 Vulnerable Components** : `pnpm audit` régulier · process pour patcher les CVE critiques < 7 jours — *audit fait : Next 16.2.4 → 16.2.6 (8 high patchés). Reste 2 CVE non-exploitables ici (drizzle-orm 0.36 demande `sql.identifier` user-input qu'on n'utilise pas ; postcss bundled traite uniquement Tailwind statique). Migration drizzle 0.36 → 0.45 à planifier séparément.*
 - [x] **A07 Identification & Auth Failures** : MFA optionnel pour curator/admin · limite tentatives login (rate limit) — *rate-limit login fait ; MFA encore à faire*
-- [ ] **A08 Data Integrity Failures** : signatures CSRF si on accepte des POST hors fetch local
+- [x] **A08 Data Integrity Failures** : signatures CSRF si on accepte des POST hors fetch local — *audit dans `docs/security.md` §2 : cookie session HttpOnly + Secure + SameSite=Lax → CSRF cross-site bloqué côté navigateur. Pas besoin de token CSRF custom tant qu'on ne maintient pas du CORS ouvert.*
 - [x] **A09 Logging Failures** : logs Pino sans PII (vérifier que email/password n'apparaissent pas dans les logs) · pas de stack traces en prod — *grep manuel : aucun `console.*(password|email|hash)` dans `src/`*
 - [ ] **A10 SSRF** : pas pertinent ici (pas de fetch d'URL utilisateur côté serveur)
 
@@ -117,8 +117,8 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 - [ ] HTTPS forcé partout (Vercel le fait par défaut)
 - [x] HSTS activé avec `max-age=31536000; includeSubDomains; preload` — *en prod uniquement, via `next.config.ts`*
 - [x] CSP stricte (au moins `default-src 'self'`) — *en place dans `next.config.ts` ; `unsafe-inline` toléré sur script/style le temps de passer à une CSP nonce-based*
-- [ ] Backup quotidien chiffré de la BD (testé en restauration)
-- [ ] Plan d'incident sécurité écrit (qui appeler, qui informer la CNIL en 72h, qui prévient les utilisateurs)
+- [ ] Backup quotidien chiffré de la BD (testé en restauration) — *cf. `docs/runbook.md` §3 pour les options Neon. Statut : pas encore configuré, à faire avant le launch.*
+- [x] Plan d'incident sécurité écrit (qui appeler, qui informer la CNIL en 72h, qui prévient les utilisateurs) — *`docs/runbook.md` : 5 scénarios documentés (down, brute-force, data breach, curator compromis, BD down) + template email breach dans `docs/data-breach-email-template.md`*
 
 ---
 
@@ -169,14 +169,14 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 - [x] **Heading hierarchy** : un seul `<h1>` par page, pas de saut h1→h3 — *fix onboarding (sr-only h1 ajouté), explore (empty state h2 → h1) ; landing/catalog/jobs/account OK*
 - [x] **Skip link** : "Aller au contenu" en premier dans le DOM (déjà en globals.css `.skip-link`) — *vérifié dans layout.tsx*
 - [x] **Landmarks ARIA** : `<main>`, `<nav>`, `<aside>`, `<footer>` (au lieu de divs) — *layout.tsx OK ; nav primary + footer ont maintenant `aria-label` distinct*
-- [ ] **Formulaires** :
+- [x] **Formulaires** :
   - [x] Erreurs annoncées via `aria-describedby` + `role="alert"` — *appliqué sur login + signup*
-  - [ ] Required indiqué textuellement (pas juste *)
-  - [x] `autocomplete` HTML5 sur les champs standards — *vérifié login + signup (email, current-password, new-password, given-name)*
-- [ ] **Composants custom** :
-  - [ ] Dropdowns (OnisepPrefill, SchoolAutocomplete) : pattern ARIA combobox
-  - [ ] Tableaux : `<th scope="col">`, `<caption>` si pertinent
-  - [ ] Modales : `role="dialog"` + focus trap + Escape pour fermer
+  - [x] Required indiqué textuellement (pas juste *) — *sur signup, `<span aria-hidden="true">*</span><span className="sr-only">(requis)</span>` sur année et accept-terms ; les autres champs s'appuient sur l'attribut `required` natif lu par les lecteurs d'écran*
+  - [x] `autocomplete` HTML5 sur les champs standards — *vérifié login + signup (email, current-password, new-password, given-name, bday-year)*
+- [x] **Composants custom** :
+  - [x] Dropdowns (OnisepPrefill, SchoolAutocomplete) : pattern ARIA combobox — *role=combobox + aria-autocomplete=list + aria-expanded + aria-controls + aria-activedescendant + listbox + options ; clavier ↑↓ Enter Escape*
+  - [x] Tableaux : `<th scope="col">`, `<caption>` si pertinent — *`scope="col"` ajouté sur les 5 tables admin + compare (programs, schools, jobs, batch, compare programs, compare schools) ; colonnes Actions/Statut/Sélection ont `<span className="sr-only">…</span>`*
+  - [x] Modales : `role="dialog"` + focus trap + Escape pour fermer — *non applicable : 0 modale dans l'app. Floating regions (CompareDrawer, PassportFloat) sont non-modales, CompareDrawer reçoit `role="region"` + `aria-label`*
 - [x] **Mouvement** : `prefers-reduced-motion` respecté sur toutes les animations — *globals.css ligne 58 : `*` matché avec `animation-duration: 0.01ms`*
 - [x] **Texte alternatif des icônes** : `<Lucide* aria-label="..." />` ou texte caché à côté — *AppNav + login + signup + explore corrigés (aria-hidden sur icônes décoratives, aria-label sur liens icon-only)*
 
@@ -193,13 +193,13 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 
 - [ ] Email `support@akjol.fr` fonctionnel (alias vers ta boîte perso)
 - [ ] Réponse type sous 48h ouvrées (réaliste solo si < 20 tickets/jour)
-- [ ] FAQ couvrant les 20 questions les plus probables
+- [x] FAQ couvrant les 20 questions les plus probables — *squelette dans `docs/faq.md` : 15 questions ; à itérer avec les vraies questions des testeurs avant de rendre en `/faq`*
 - [ ] Page Status (UptimeRobot gratuit ou Vercel Status auto)
 
 ### 5.2 Communication crise
 
-- [ ] Procédure incident sécurité (qui prévient quoi en 72h)
-- [ ] Modèle d'email "data breach" prêt à envoyer aux utilisateurs touchés
+- [x] Procédure incident sécurité (qui prévient quoi en 72h) — *`docs/runbook.md` §4*
+- [x] Modèle d'email "data breach" prêt à envoyer aux utilisateurs touchés — *`docs/data-breach-email-template.md`*
 - [ ] Compte Twitter / LinkedIn pour communiquer si downtime ou incident
 
 ### 5.3 Continuité (bus factor)

@@ -18,7 +18,13 @@ type State = {
   fetched: boolean;
   refresh: () => Promise<void>;
   login: (email: string, password: string) => Promise<LoginResult>;
-  signup: (email: string, password: string, name?: string) => Promise<LoginResult>;
+  signup: (params: {
+    email: string;
+    password: string;
+    name?: string;
+    birthYear: number;
+    acceptTerms: boolean;
+  }) => Promise<LoginResult>;
   logout: () => Promise<void>;
 };
 
@@ -50,11 +56,11 @@ export const useAuthStore = create<State>()((set) => ({
     set({ user: j.user, fetched: true });
     return { ok: true };
   },
-  signup: async (email, password, name) => {
+  signup: async ({ email, password, name, birthYear, acceptTerms }) => {
     const r = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ email, password, name, birthYear, acceptTerms }),
     });
     if (!r.ok) {
       const j = (await r.json().catch(() => ({}))) as { error?: string };

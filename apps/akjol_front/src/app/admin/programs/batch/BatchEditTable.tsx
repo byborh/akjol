@@ -241,17 +241,19 @@ export function BatchEditTable({ programs }: { programs: AdminProgramRow[] }) {
         <table className="w-full text-sm border-collapse">
           <thead className="bg-gray-50 text-gray-600 text-[11px] uppercase tracking-wider sticky top-0">
             <tr>
-              <th className="px-2 py-2 text-left w-10"></th>
-              <th className="px-2 py-2 text-left min-w-[200px]">Titre</th>
-              <th className="px-2 py-2 text-left w-20">Niveau</th>
-              <th className="px-2 py-2 text-left min-w-[160px]">École</th>
-              <th className="px-2 py-2 text-left min-w-[120px]">Ville</th>
-              <th className="px-2 py-2 text-left w-16">Durée</th>
-              <th className="px-2 py-2 text-left w-20">Coût/an</th>
-              <th className="px-2 py-2 text-left w-20">CECRL</th>
-              <th className="px-2 py-2 text-left w-32">Plateforme</th>
-              <th className="px-2 py-2 text-center w-16">Curée</th>
-              <th className="px-2 py-2 text-right w-24">Actions</th>
+              <th scope="col" className="px-2 py-2 text-left w-10">
+                <span className="sr-only">Sélection</span>
+              </th>
+              <th scope="col" className="px-2 py-2 text-left min-w-[200px]">Titre</th>
+              <th scope="col" className="px-2 py-2 text-left w-20">Niveau</th>
+              <th scope="col" className="px-2 py-2 text-left min-w-[160px]">École</th>
+              <th scope="col" className="px-2 py-2 text-left min-w-[120px]">Ville</th>
+              <th scope="col" className="px-2 py-2 text-left w-16">Durée</th>
+              <th scope="col" className="px-2 py-2 text-left w-20">Coût/an</th>
+              <th scope="col" className="px-2 py-2 text-left w-20">CECRL</th>
+              <th scope="col" className="px-2 py-2 text-left w-32">Plateforme</th>
+              <th scope="col" className="px-2 py-2 text-center w-16">Curée</th>
+              <th scope="col" className="px-2 py-2 text-right w-24">Actions</th>
             </tr>
           </thead>
           <tbody>

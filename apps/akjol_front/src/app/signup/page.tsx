@@ -7,6 +7,11 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
 import { useAuthStore } from "../../store/auth-store";
 
+// Année max acceptée = année courante - 15 (seuil RGPD français Art. 8).
+// Mise à jour automatique à chaque appel SSR/build, donc pas besoin de la
+// régénérer manuellement chaque année — c'est ce qu'on veut.
+const MAX_BIRTH_YEAR = new Date().getUTCFullYear() - 15;
+
 export default function SignupPage() {
   return (
     <Suspense fallback={null}>
@@ -23,6 +28,8 @@ function SignupInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -32,15 +39,18 @@ function SignupInner() {
     e.preventDefault();
     setBusy(true);
     setErr(null);
-    const r = await signup(email.trim().toLowerCase(), password, name.trim() || undefined);
+    const r = await signup({
+      email: email.trim().toLowerCase(),
+      password,
+      name: name.trim() || undefined,
+      birthYear: Number.parseInt(birthYear, 10),
+      acceptTerms,
+    });
     setBusy(false);
     if (!r.ok) {
       setErr(r.error);
       return;
     }
-    // Nouvelle inscription : on envoie d'office sur /onboarding pour
-    // construire le passeport. `next` reste honoré seulement si quelqu'un
-    // l'a explicitement passé (rare ; cas de redirect post-login).
     router.replace(r.requiresOnboarding ? "/onboarding" : next);
   }
 
@@ -133,6 +143,55 @@ function SignupInner() {
             className="w-full text-sm rounded-md border border-black/10 px-3 py-2 outline-none focus:border-[#ee7768]"
           />
         </div>
+        <div>
+          <label
+            htmlFor="signup-birth-year"
+            className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1"
+          >
+            Année de naissance <span aria-hidden="true">*</span>
+            <span className="sr-only">(requis)</span>
+          </label>
+          <input
+            id="signup-birth-year"
+            required
+            type="number"
+            inputMode="numeric"
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
+            min={1900}
+            max={MAX_BIRTH_YEAR}
+            placeholder="2008"
+            autoComplete="bday-year"
+            aria-describedby="signup-birth-year-hint"
+            className="w-full text-sm rounded-md border border-black/10 px-3 py-2 outline-none focus:border-[#ee7768]"
+          />
+          <p id="signup-birth-year-hint" className="text-[11px] text-[#1a1d24]/50 mt-1">
+            AkJol est réservé aux 15 ans et plus (RGPD Art. 8). Ton année de naissance n'est pas
+            stockée — elle ne sert qu'à valider l'inscription.
+          </p>
+        </div>
+        <div className="flex items-start gap-2 pt-1">
+          <input
+            id="signup-accept-terms"
+            required
+            type="checkbox"
+            checked={acceptTerms}
+            onChange={(e) => setAcceptTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-black/20 accent-[#ee7768]"
+          />
+          <label htmlFor="signup-accept-terms" className="text-[12px] text-[#1a1d24]/75 leading-relaxed">
+            J'accepte les{" "}
+            <Link href="/terms" className="underline hover:text-[#1a1d24]">
+              CGU
+            </Link>{" "}
+            et la{" "}
+            <Link href="/privacy" className="underline hover:text-[#1a1d24]">
+              politique de confidentialité
+            </Link>
+            . <span aria-hidden="true">*</span>
+            <span className="sr-only">(requis)</span>
+          </label>
+        </div>
         {err ? (
           <p id="signup-error" role="alert" className="text-[12px] text-[#7e2929]">
             {err}
@@ -140,24 +199,13 @@ function SignupInner() {
         ) : null}
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || !acceptTerms}
           className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white"
-          style={{ background: "#ee7768", opacity: busy ? 0.7 : 1 }}
+          style={{ background: "#ee7768", opacity: busy || !acceptTerms ? 0.5 : 1 }}
         >
           <UserPlus size={14} aria-hidden="true" />
           {busy ? "Création…" : "Créer mon compte"}
         </button>
-        <p className="text-[11px] text-[#1a1d24]/50 leading-relaxed">
-          En créant un compte, tu acceptes nos{" "}
-          <Link href="/terms" className="underline hover:text-[#1a1d24]">
-            CGU
-          </Link>{" "}
-          et notre{" "}
-          <Link href="/privacy" className="underline hover:text-[#1a1d24]">
-            politique de confidentialité
-          </Link>
-          . Tes données restent locales par défaut.
-        </p>
       </form>
     </PageContainer>
   );

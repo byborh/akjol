@@ -28,6 +28,9 @@ export function AppFooter() {
           <Link href="/terms" className="hover:text-[#1a1d24]">
             {t("terms")}
           </Link>
+          <Link href="/mentions-legales" className="hover:text-[#1a1d24]">
+            {t("mentions")}
+          </Link>
           <Link href="/data" className="hover:text-[#1a1d24]">
             {t("data")}
           </Link>

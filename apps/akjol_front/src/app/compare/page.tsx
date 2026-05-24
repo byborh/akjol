@@ -126,11 +126,11 @@ function ProgramComparison({
       <table className="w-full text-sm" style={{ minWidth: items.length * 220 + 200 }}>
         <thead>
           <tr className="border-b border-black/5">
-            <th className="sticky left-0 bg-white px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold w-44">
+            <th scope="col" className="sticky left-0 bg-white px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold w-44">
               Critère
             </th>
             {items.map((p, i) => (
-              <th key={p.id} className="px-4 py-3 text-left align-top min-w-[220px]">
+              <th scope="col" key={p.id} className="px-4 py-3 text-left align-top min-w-[220px]">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <Link
                     href={`/program/${p.id}`}
@@ -288,11 +288,11 @@ function SchoolComparison({
       <table className="w-full text-sm" style={{ minWidth: items.length * 220 + 200 }}>
         <thead>
           <tr className="border-b border-black/5">
-            <th className="sticky left-0 bg-white px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold w-44">
+            <th scope="col" className="sticky left-0 bg-white px-4 py-3 text-left text-[10px] uppercase tracking-wider text-[#1a1d24]/50 font-semibold w-44">
               Critère
             </th>
             {items.map((s) => (
-              <th key={s.id} className="px-4 py-3 text-left align-top min-w-[220px]">
+              <th scope="col" key={s.id} className="px-4 py-3 text-left align-top min-w-[220px]">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <Link
                     href={`/school/${s.id}`}

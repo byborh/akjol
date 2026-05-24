@@ -19,7 +19,11 @@ export function CompareDrawer() {
   if (!mounted || total === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-2rem)]">
+    <div
+      role="region"
+      aria-label="Comparateur de programmes et écoles"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-2rem)]"
+    >
       <div className="rounded-2xl bg-[#1a1d24] text-white shadow-2xl border border-white/10 px-3 py-2 flex items-center gap-2">
         <div className="flex items-center gap-2 pr-2 border-r border-white/10">
           <span

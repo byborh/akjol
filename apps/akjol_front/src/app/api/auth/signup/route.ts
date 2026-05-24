@@ -12,7 +12,15 @@ const Body = z.object({
   email: z.string(),
   password: z.string(),
   name: z.string().optional(),
+  birthYear: z.number().int(),
+  acceptTerms: z.boolean(),
 });
+
+// RGPD Art. 8 : seuil français de consentement numérique fixé à 15 ans.
+// On ne stocke pas l'année de naissance (le refus suffit comme preuve
+// d'audit, et minimiser la collecte de PII est l'esprit du RGPD). Pour
+// passer < 15 ans il faudra implémenter le double consentement parental.
+const MIN_AGE_YEARS = 15;
 
 export async function POST(req: Request) {
   const limited = rateLimitResponse(`signup:${clientIp(req)}`, 3, 60 * 60_000);
@@ -31,6 +39,25 @@ export async function POST(req: Request) {
   const email = parsed.data.email.trim().toLowerCase();
   const password = parsed.data.password;
   const name = (parsed.data.name ?? "").trim() || email.split("@")[0];
+
+  if (!parsed.data.acceptTerms) {
+    return NextResponse.json(
+      { error: "Tu dois accepter les CGU et la politique de confidentialité pour créer un compte." },
+      { status: 400 },
+    );
+  }
+
+  const currentYear = new Date().getUTCFullYear();
+  const age = currentYear - parsed.data.birthYear;
+  if (!Number.isFinite(age) || age < MIN_AGE_YEARS || age > 120) {
+    return NextResponse.json(
+      {
+        error:
+          "AkJol est réservé aux personnes de 15 ans et plus. Reviens à ton anniversaire — ou demande à un parent.",
+      },
+      { status: 403 },
+    );
+  }
 
   const policyErr = passwordPolicyError(password);
   if (policyErr) return NextResponse.json({ error: policyErr }, { status: 400 });
