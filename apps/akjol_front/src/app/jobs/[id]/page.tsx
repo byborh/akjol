@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -22,7 +23,11 @@ import { usePassportStore } from "../../../store/passport-store";
 import { useTrajectoryStore, applyTrajectory } from "../../../store/trajectory-store";
 import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { useMounted } from "../../../hooks/useMounted";
-import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
+
+const TrajectoryFlow = dynamic(
+  () => import("../../../components/TrajectoryFlow").then((m) => m.TrajectoryFlow),
+  { ssr: false, loading: () => <div style={{ height: 220 }} aria-hidden /> },
+);
 import { findProgram } from "../../../data/programs";
 import { useJob, useJobs, usePrograms } from "../../../hooks/data";
 import { formatCost } from "../../../data/fxRates";

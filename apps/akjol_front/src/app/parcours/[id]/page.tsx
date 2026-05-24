@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import {
@@ -29,9 +30,13 @@ import { useTrajectoryStore } from "../../../store/trajectory-store";
 import { useMounted } from "../../../hooks/useMounted";
 import { findCountry } from "../../../data/countries";
 import { getSchoolsFrom, slugifySchool } from "../../../data/schools";
-import { TrajectoryFlow } from "../../../components/TrajectoryFlow";
 import { usePassportStore } from "../../../store/passport-store";
 import { usePrograms } from "../../../hooks/data";
+
+const TrajectoryFlow = dynamic(
+  () => import("../../../components/TrajectoryFlow").then((m) => m.TrajectoryFlow),
+  { ssr: false, loading: () => <div style={{ height: 220 }} aria-hidden /> },
+);
 
 const EMOJIS = ["🚀", "🎓", "🌍", "🧠", "⚙️", "🩺", "🎨", "💼", "🔭", "🌱"];
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Filter, Sparkles, List, Globe as GlobeIcon } from "lucide-react";
 import { PageContainer } from "../../components/PageContainer";
@@ -8,7 +9,14 @@ import { ProgramCard } from "../../components/ProgramCard";
 import { TrajectoryBar } from "../../components/TrajectoryBar";
 import { FromToSearch } from "../../components/FromToSearch";
 import { Globe } from "../../components/Globe";
-import { TrajectoryFlow } from "../../components/TrajectoryFlow";
+
+// @xyflow/react fait ~150 KB gzip. On charge TrajectoryFlow uniquement
+// quand l'utilisateur active le mode exploration virtuelle ET a au moins
+// une étape — sinon il pèse pour rien sur les visiteurs en mode list.
+const TrajectoryFlow = dynamic(
+  () => import("../../components/TrajectoryFlow").then((m) => m.TrajectoryFlow),
+  { ssr: false, loading: () => <div style={{ height: 210 }} aria-hidden /> },
+);
 import { COUNTRIES } from "../../data/countries";
 import { usePrograms } from "../../hooks/data";
 import { computeFeasibility } from "../../engine/feasibility";

@@ -22,7 +22,6 @@
     "@xyflow/react": "^12.10.2",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.36.0",
-    "framer-motion": "^12.34.5",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.562.0",
     "nanoid": "^5.1.11",

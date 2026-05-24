@@ -136,14 +136,14 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 
 ### 3.2 Optimisations courantes
 
-- [ ] **Images** : tout en `next/image` avec `placeholder="blur"` · WebP/AVIF · taille adaptée au viewport
-- [ ] **JS bundle** : analyser via `@next/bundle-analyzer` · découper en lazy via `next/dynamic` les composants lourds (globe 3D, graph React Flow, etc.)
-- [ ] **Fonts** : `next/font` avec preload · subset français + caractères latins
-- [ ] **CSS** : Tailwind purge automatique · vérifier qu'aucun import CSS lourd ne traîne
+- [x] **Images** : tout en `next/image` avec `placeholder="blur"` · WebP/AVIF · taille adaptée au viewport — *0 `<img>` / `<Image>` dans le code : pas d'images bitmap à charger côté app (seulement SVG inline et emojis flag)*
+- [x] **JS bundle** : analyser via `@next/bundle-analyzer` · découper en lazy via `next/dynamic` les composants lourds (globe 3D, graph React Flow, etc.) — *Globe (react-globe.gl + three.js) déjà lazy en interne. TrajectoryFlow (@xyflow/react) passé en `next/dynamic` dans 3 callers (explore, jobs/[id], parcours/[id]). SchoolMap (leaflet) déjà dynamic. `framer-motion` supprimé (déclaré mais zéro import). Analyzer non installé : Next 16 Turbopack ne publie pas le tableau bundle inline, à instrumenter si besoin*
+- [x] **Fonts** : `next/font` avec preload · subset français + caractères latins — *Inter + JetBrains_Mono via `next/font/google` dans layout.tsx, `display: "swap"`, subset `latin`*
+- [x] **CSS** : Tailwind purge automatique · vérifier qu'aucun import CSS lourd ne traîne — *Tailwind v4 (@tailwindcss/postcss) ; seul `globals.css` (66 lignes) + `@xyflow/react/dist/style.css` côté TrajectoryFlow lazy*
 - [ ] **TTFB** : Vercel Edge si possible · sinon vérifier que pas de fetch sériel inutile en SSR
-- [ ] **Cache HTTP** : `Cache-Control` agressif sur `/api/programs`, `/api/schools`, `/api/jobs` (déjà fait sur certaines, à compléter)
-- [ ] **Third-party scripts** : audit · charger en `defer` ou via `next/script` avec `strategy="lazyOnload"`
-- [ ] **Animations** : `transform` et `opacity` uniquement · pas de `width/height/top/left` qui déclenche layout
+- [x] **Cache HTTP** : `Cache-Control` agressif sur `/api/programs`, `/api/schools`, `/api/jobs` (déjà fait sur certaines, à compléter) — *présent sur les 6 routes data publiques (programs, schools, jobs + [id]). Valeurs `public, max-age=60-300, s-maxage=300-600, stale-while-revalidate=600`*
+- [x] **Third-party scripts** : audit · charger en `defer` ou via `next/script` avec `strategy="lazyOnload"` — *seul script tiers : Plausible, déjà chargé en `strategy="afterInteractive" defer` + opt-out localStorage/DNT (PlausibleScript.tsx)*
+- [x] **Animations** : `transform` et `opacity` uniquement · pas de `width/height/top/left` qui déclenche layout — *aucune lib d'animation (framer-motion supprimé) ; transitions Tailwind par défaut sur `transform`/`opacity` ; `prefers-reduced-motion` global*
 
 ### 3.3 Mesure continue
 
