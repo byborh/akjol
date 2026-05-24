@@ -12,12 +12,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:akjol": "drizzle-kit akjol",
-    "seed": "tsx scripts/seed.ts",
-    "promote:curator": "tsx scripts/promote-curator.ts",
-    "import:schools": "tsx scripts/import-schools.ts",
-    "seed:jobs-tech": "tsx scripts/seed-jobs-tech.ts",
-    "seed:iut": "tsx scripts/seed-iut.ts",
-    "seed:equivalences": "tsx scripts/seed-equivalences.ts",
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "promote:curator": "tsx --env-file=.env.local scripts/promote-curator.ts",
+    "import:schools": "tsx --env-file=.env.local scripts/import-schools.ts",
+    "seed:jobs-tech": "tsx --env-file=.env.local scripts/seed-jobs-tech.ts",
+    "seed:iut": "tsx --env-file=.env.local scripts/seed-iut.ts",
+    "seed:equivalences": "tsx --env-file=.env.local scripts/seed-equivalences.ts",
     "ingest": "pnpm --filter @akjol/ingest ingest",
     "ingest:onisep": "pnpm --filter @akjol/ingest ingest:onisep",
     "ingest:mon-master": "pnpm --filter @akjol/ingest ingest:mon-master",
@@ -26,6 +26,7 @@
     "ingest:all": "pnpm --filter @akjol/ingest ingest:all"
   },
   "devDependencies": {
+    "dotenv": "^17.4.2",
     "drizzle-kit": "^0.30.0",
     "tsx": "^4.19.0",
     "turbo": "^2.3.0",
@@ -33,5 +34,17 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "pnpm": {
+    "overrides": {
+      "drizzle-orm": "^0.36.4"
+    },
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "@parcel/watcher",
+      "@swc/core",
+      "esbuild",
+      "sharp"
+    ]
   }
 }
