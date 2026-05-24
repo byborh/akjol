@@ -45,7 +45,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@akjol/db", "@akjol/logger", "@akjol/shared", "@akjol/ui"],
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["better-sqlite3", "@libsql/client", "libsql"],
   async headers() {
     return [
       {
