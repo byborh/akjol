@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldAlert, GitBranch, FileText, Table } from "lucide-react";
+import { ShieldAlert, GitBranch, FileText, Table, Briefcase, Building2, LayoutDashboard } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -13,8 +13,11 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, excludePrefixes: ["/admin/"] },
   { href: "/admin/programs", label: "Programs", icon: FileText, excludePrefixes: ["/admin/programs/batch"] },
   { href: "/admin/programs/batch", label: "Batch", icon: Table },
+  { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/admin/schools", label: "Schools", icon: Building2 },
   { href: "/admin/graph", label: "Equivalences", icon: GitBranch },
 ];
 

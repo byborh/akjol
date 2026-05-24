@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import type { Db } from "./index";
-import { programs, jobs, type ProgramRow, type JobRow } from "./schema";
+import { programs, jobs, schools, type ProgramRow, type JobRow, type SchoolRow } from "./schema";
 
 /**
  * Options communes aux lectures de la table `programs`.
@@ -405,6 +405,81 @@ export async function deleteProgramFromAdmin(db: Db, id: string): Promise<boolea
   return true;
 }
 
+/**
+ * Création / mise à jour / suppression d'un job via l'Admin.
+ */
+export type AdminJobInput = {
+  id?: string;
+  code: string;
+  label: string;
+  riskAutomation: number; // 0..100
+  domains: string[];
+  salary: Array<{ country: string; median: number; currency: string }>;
+  regionsTopHiring: string[];
+  dailyTasks: string[];
+  requiresDiplomas: string[];
+  matchKeywords: string[];
+};
+
+function jobInputToRow(input: AdminJobInput, fallbackId: string) {
+  return {
+    id: input.id?.trim() || fallbackId,
+    code: input.code,
+    label: input.label,
+    riskAutomation: input.riskAutomation,
+    domains: JSON.stringify(input.domains),
+    salary: JSON.stringify(input.salary),
+    regionsTopHiring: JSON.stringify(input.regionsTopHiring),
+    dailyTasks: JSON.stringify(input.dailyTasks),
+    requiresDiplomas: JSON.stringify(input.requiresDiplomas),
+    matchKeywords: JSON.stringify(input.matchKeywords),
+  };
+}
+
+export async function createJobFromAdmin(
+  db: Db,
+  input: AdminJobInput,
+): Promise<JobDto> {
+  const fallbackId = `job-${slugify(input.label)}-${Date.now().toString(36)}`;
+  const row = jobInputToRow(input, fallbackId);
+  await db.insert(jobs).values(row);
+  const created = await getJobById(db, row.id);
+  if (!created) throw new Error("createJobFromAdmin: row not found after insert");
+  return created;
+}
+
+export async function updateJobFromAdmin(
+  db: Db,
+  id: string,
+  input: AdminJobInput,
+): Promise<JobDto | null> {
+  const existing = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+  if (!existing[0]) return null;
+  const row = jobInputToRow({ ...input, id }, id);
+  await db
+    .update(jobs)
+    .set({
+      code: row.code,
+      label: row.label,
+      riskAutomation: row.riskAutomation,
+      domains: row.domains,
+      salary: row.salary,
+      regionsTopHiring: row.regionsTopHiring,
+      dailyTasks: row.dailyTasks,
+      requiresDiplomas: row.requiresDiplomas,
+      matchKeywords: row.matchKeywords,
+    })
+    .where(eq(jobs.id, id));
+  return getJobById(db, id);
+}
+
+export async function deleteJobFromAdmin(db: Db, id: string): Promise<boolean> {
+  const existing = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+  if (!existing[0]) return false;
+  await db.delete(jobs).where(eq(jobs.id, id));
+  return true;
+}
+
 export async function getAllJobs(db: Db): Promise<JobDto[]> {
   const rows = await db.select().from(jobs);
   return rows.map(rowToJob);
@@ -418,4 +493,116 @@ export async function getJobById(db: Db, id: string): Promise<JobDto | null> {
 export async function countJobs(db: Db): Promise<number> {
   const rows = await db.select().from(jobs).limit(1);
   return rows.length;
+}
+
+// ─────────── Schools (CRUD Admin) ───────────
+
+/**
+ * Vue Admin d'un établissement. Identique à la row DB mais avec lat/lng
+ * convertis en degrés décimaux (stockage interne en *1e6 pour précision).
+ */
+export type AdminSchoolRow = {
+  uai: string;
+  name: string;
+  city: string;
+  postalCode: string | null;
+  region: string | null;
+  lat: number | null;
+  lng: number | null;
+  type: string | null;
+  websiteUrl: string | null;
+  updatedAt: Date;
+};
+
+function rowToAdminSchool(r: SchoolRow): AdminSchoolRow {
+  return {
+    uai: r.uai,
+    name: r.name,
+    city: r.city,
+    postalCode: r.postalCode,
+    region: r.region,
+    lat: r.lat !== null ? r.lat / 1e6 : null,
+    lng: r.lng !== null ? r.lng / 1e6 : null,
+    type: r.type,
+    websiteUrl: r.websiteUrl,
+    updatedAt: r.updatedAt,
+  };
+}
+
+export type AdminSchoolInput = {
+  uai: string;
+  name: string;
+  city: string;
+  postalCode?: string;
+  region?: string;
+  lat?: number;
+  lng?: number;
+  type?: string;
+  websiteUrl?: string;
+};
+
+function schoolInputToRow(input: AdminSchoolInput) {
+  return {
+    uai: input.uai,
+    name: input.name,
+    city: input.city,
+    postalCode: input.postalCode || null,
+    region: input.region || null,
+    lat: input.lat !== undefined ? Math.round(input.lat * 1e6) : null,
+    lng: input.lng !== undefined ? Math.round(input.lng * 1e6) : null,
+    type: input.type || null,
+    websiteUrl: input.websiteUrl || null,
+  };
+}
+
+export async function getAllSchoolsForAdmin(db: Db): Promise<AdminSchoolRow[]> {
+  const rows = await db.select().from(schools);
+  return rows.map(rowToAdminSchool);
+}
+
+export async function getSchoolByUai(db: Db, uai: string): Promise<AdminSchoolRow | null> {
+  const rows = await db.select().from(schools).where(eq(schools.uai, uai)).limit(1);
+  return rows[0] ? rowToAdminSchool(rows[0]) : null;
+}
+
+export async function createSchoolFromAdmin(
+  db: Db,
+  input: AdminSchoolInput,
+): Promise<AdminSchoolRow> {
+  await db.insert(schools).values(schoolInputToRow(input));
+  const created = await getSchoolByUai(db, input.uai);
+  if (!created) throw new Error("createSchoolFromAdmin: row not found after insert");
+  return created;
+}
+
+export async function updateSchoolFromAdmin(
+  db: Db,
+  uai: string,
+  input: AdminSchoolInput,
+): Promise<AdminSchoolRow | null> {
+  const existing = await db.select().from(schools).where(eq(schools.uai, uai)).limit(1);
+  if (!existing[0]) return null;
+  // L'UAI étant PK, on n'autorise pas de le changer ici. Si besoin de "renommer"
+  // l'UAI, supprimer + recréer + repointer manuellement les programs.school_uai.
+  const row = schoolInputToRm(uai, input);
+  await db
+    .update(schools)
+    .set(row)
+    .where(eq(schools.uai, uai));
+  return getSchoolByUai(db, uai);
+}
+
+function schoolInputToRm(uai: string, input: AdminSchoolInput) {
+  const r = schoolInputToRow({ ...input, uai });
+  // On retire l'UAI du set update (immuable)
+  const { uai: _ignored, ...rest } = r;
+  void _ignored;
+  return rest;
+}
+
+export async function deleteSchoolFromAdmin(db: Db, uai: string): Promise<boolean> {
+  const existing = await db.select().from(schools).where(eq(schools.uai, uai)).limit(1);
+  if (!existing[0]) return false;
+  await db.delete(schools).where(eq(schools.uai, uai));
+  return true;
 }
