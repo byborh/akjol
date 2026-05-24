@@ -126,8 +126,8 @@ function ExploreInner() {
   if (mounted && hydrated && !isComplete) {
     return (
       <PageContainer className="max-w-xl text-center pt-16">
-        <Sparkles size={28} className="mx-auto text-[#ee7768] mb-3" />
-        <h2 className="text-2xl font-medium tracking-tight">Avant de te montrer le monde…</h2>
+        <Sparkles size={28} className="mx-auto text-[#ee7768] mb-3" aria-hidden="true" />
+        <h1 className="text-2xl font-medium tracking-tight">Avant de te montrer le monde…</h1>
         <p className="text-[#1a1d24]/70 mt-2">
           J'ai besoin de te connaître. Construis ton passeport-éducation, ça prend 1 à 2 minutes.
         </p>

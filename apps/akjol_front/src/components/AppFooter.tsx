@@ -12,7 +12,7 @@ export function AppFooter() {
         <span>
           AkJol — {t("tagline")} · <span className="text-[#1a1d24]/40">v1.5</span>
         </span>
-        <nav className="flex items-center gap-x-4 gap-y-1 flex-wrap">
+        <nav aria-label={t("secondary")} className="flex items-center gap-x-4 gap-y-1 flex-wrap">
           <Link href="/methodologie" className="hover:text-[#1a1d24]">
             {t("methodology")}
           </Link>

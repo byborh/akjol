@@ -34,27 +34,32 @@ export function AppNav() {
           <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#ee7768" }} />
           AkJol
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-3 text-sm">
+        <nav aria-label={t("primary")} className="flex items-center gap-1 sm:gap-3 text-sm">
           {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
             const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+            const label = t(labelKey);
             return (
               <Link
                 key={href}
                 href={href}
+                aria-label={label}
+                aria-current={active ? "page" : undefined}
                 className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition"
                 style={{
                   color: active ? "#ee7768" : "#1a1d24b3",
                   background: active ? "#ee776812" : "transparent",
                 }}
               >
-                <Icon size={14} />
-                <span className="hidden sm:inline">{t(labelKey)}</span>
+                <Icon size={14} aria-hidden="true" />
+                <span className="hidden sm:inline">{label}</span>
               </Link>
             );
           })}
           <ParcoursMenu />
           <Link
             href="/account"
+            aria-label={user ? user.name || t("account") : t("login")}
+            aria-current={pathname.startsWith("/account") ? "page" : undefined}
             className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md transition text-sm"
             style={{
               color: pathname.startsWith("/account") ? "#ee7768" : "#1a1d24b3",
@@ -62,7 +67,7 @@ export function AppNav() {
             }}
             title={user ? user.email : t("login")}
           >
-            <User size={14} />
+            <User size={14} aria-hidden="true" />
             <span className="hidden sm:inline">{user ? user.name : t("account")}</span>
           </Link>
         </nav>

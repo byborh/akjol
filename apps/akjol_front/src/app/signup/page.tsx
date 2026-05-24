@@ -54,7 +54,7 @@ function SignupInner() {
         href="/"
         className="inline-flex items-center gap-1 text-sm text-[#1a1d24]/60 hover:text-[#1a1d24] mb-6"
       >
-        <ArrowLeft size={14} /> Retour
+        <ArrowLeft size={14} aria-hidden="true" /> Retour
       </Link>
 
       <h1 className="text-3xl font-medium tracking-tight">Créer un compte</h1>
@@ -78,12 +78,16 @@ function SignupInner() {
         <div className="flex-1 h-px bg-black/10" />
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-3">
+      <form onSubmit={onSubmit} className="space-y-3" aria-describedby={err ? "signup-error" : undefined}>
         <div>
-          <label className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1">
+          <label
+            htmlFor="signup-name"
+            className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1"
+          >
             Prénom (optionnel)
           </label>
           <input
+            id="signup-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -93,10 +97,14 @@ function SignupInner() {
           />
         </div>
         <div>
-          <label className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1">
+          <label
+            htmlFor="signup-email"
+            className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1"
+          >
             Email
           </label>
           <input
+            id="signup-email"
             required
             type="email"
             value={email}
@@ -107,10 +115,14 @@ function SignupInner() {
           />
         </div>
         <div>
-          <label className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1">
+          <label
+            htmlFor="signup-password"
+            className="block text-[11px] uppercase tracking-wider text-[#1a1d24]/50 mb-1"
+          >
             Mot de passe
           </label>
           <input
+            id="signup-password"
             required
             type="password"
             value={password}
@@ -121,14 +133,18 @@ function SignupInner() {
             className="w-full text-sm rounded-md border border-black/10 px-3 py-2 outline-none focus:border-[#ee7768]"
           />
         </div>
-        {err ? <p className="text-[12px] text-[#7e2929]">{err}</p> : null}
+        {err ? (
+          <p id="signup-error" role="alert" className="text-[12px] text-[#7e2929]">
+            {err}
+          </p>
+        ) : null}
         <button
           type="submit"
           disabled={busy}
           className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white"
           style={{ background: "#ee7768", opacity: busy ? 0.7 : 1 }}
         >
-          <UserPlus size={14} />
+          <UserPlus size={14} aria-hidden="true" />
           {busy ? "Création…" : "Créer mon compte"}
         </button>
         <p className="text-[11px] text-[#1a1d24]/50 leading-relaxed">

@@ -1,5 +1,6 @@
 {
   "nav": {
+    "primary": "Navigation principale",
     "explore": "Explorer",
     "catalog": "Catalogue",
     "jobs": "Métiers",
@@ -8,6 +9,7 @@
     "login": "Se connecter"
   },
   "footer": {
+    "secondary": "Liens secondaires",
     "tagline": "Routeur d'études",
     "version": "version",
     "methodology": "Méthodologie",

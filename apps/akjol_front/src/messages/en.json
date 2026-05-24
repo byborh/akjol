@@ -1,5 +1,6 @@
 {
   "nav": {
+    "primary": "Main navigation",
     "explore": "Explore",
     "catalog": "Catalog",
     "jobs": "Jobs",
@@ -8,6 +9,7 @@
     "login": "Sign in"
   },
   "footer": {
+    "secondary": "Secondary links",
     "tagline": "Education router",
     "version": "version",
     "methodology": "Methodology",

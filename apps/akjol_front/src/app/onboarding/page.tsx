@@ -132,6 +132,7 @@ function OnboardingInner() {
 
   return (
     <PageContainer className="max-w-xl pt-6">
+      <h1 className="sr-only">Construire ton passeport-éducation</h1>
       {step === 1 ? (
         <div className="mb-6 rounded-xl bg-[#ee776810] border border-[#ee7768]/20 px-4 py-3">
           <p className="text-sm text-[#1a1d24] leading-relaxed">

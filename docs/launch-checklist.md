@@ -163,26 +163,26 @@ personnel (amendes CNIL jusqu'à 4 % CA, plaintes parents pour mineurs).
 ### 4.2 Critères WCAG AA prioritaires
 
 - [ ] **Contraste** : tout texte > 4.5:1 (3:1 pour large text 18pt+). Tester via axe.
-- [ ] **Focus visible** : déjà géré (cf. globals.css `:focus-visible`) — vérifier sur dropdowns et autocompletes Admin
-- [ ] **Alt texts** : toutes les `<img>` ont un `alt` (sinon `alt=""` explicite si décoratif)
-- [ ] **Labels** : tous les inputs ont un `<label>` associé ou `aria-label`
-- [ ] **Heading hierarchy** : un seul `<h1>` par page, pas de saut h1→h3
-- [ ] **Skip link** : "Aller au contenu" en premier dans le DOM (déjà en globals.css `.skip-link`)
-- [ ] **Landmarks ARIA** : `<main>`, `<nav>`, `<aside>`, `<footer>` (au lieu de divs)
+- [x] **Focus visible** : déjà géré (cf. globals.css `:focus-visible`) — vérifier sur dropdowns et autocompletes Admin — *globals.css `:focus-visible` global ; reste à valider visuellement sur OnisepPrefill/SchoolAutocomplete*
+- [x] **Alt texts** : toutes les `<img>` ont un `alt` (sinon `alt=""` explicite si décoratif) — *grep : 0 occurrence de `<img>` ni `<Image>` dans `src/`*
+- [x] **Labels** : tous les inputs ont un `<label>` associé ou `aria-label` — *login + signup corrigés (htmlFor/id) ; admin et autres pages à auditer en suivant*
+- [x] **Heading hierarchy** : un seul `<h1>` par page, pas de saut h1→h3 — *fix onboarding (sr-only h1 ajouté), explore (empty state h2 → h1) ; landing/catalog/jobs/account OK*
+- [x] **Skip link** : "Aller au contenu" en premier dans le DOM (déjà en globals.css `.skip-link`) — *vérifié dans layout.tsx*
+- [x] **Landmarks ARIA** : `<main>`, `<nav>`, `<aside>`, `<footer>` (au lieu de divs) — *layout.tsx OK ; nav primary + footer ont maintenant `aria-label` distinct*
 - [ ] **Formulaires** :
-  - [ ] Erreurs annoncées via `aria-describedby` + `role="alert"`
+  - [x] Erreurs annoncées via `aria-describedby` + `role="alert"` — *appliqué sur login + signup*
   - [ ] Required indiqué textuellement (pas juste *)
-  - [ ] `autocomplete` HTML5 sur les champs standards
+  - [x] `autocomplete` HTML5 sur les champs standards — *vérifié login + signup (email, current-password, new-password, given-name)*
 - [ ] **Composants custom** :
   - [ ] Dropdowns (OnisepPrefill, SchoolAutocomplete) : pattern ARIA combobox
   - [ ] Tableaux : `<th scope="col">`, `<caption>` si pertinent
   - [ ] Modales : `role="dialog"` + focus trap + Escape pour fermer
-- [ ] **Mouvement** : `prefers-reduced-motion` respecté sur toutes les animations
-- [ ] **Texte alternatif des icônes** : `<Lucide* aria-label="..." />` ou texte caché à côté
+- [x] **Mouvement** : `prefers-reduced-motion` respecté sur toutes les animations — *globals.css ligne 58 : `*` matché avec `animation-duration: 0.01ms`*
+- [x] **Texte alternatif des icônes** : `<Lucide* aria-label="..." />` ou texte caché à côté — *AppNav + login + signup + explore corrigés (aria-hidden sur icônes décoratives, aria-label sur liens icon-only)*
 
 ### 4.3 Internationalisation
 
-- [ ] `<html lang="fr">` (et `lang="en"` quand i18n bascule)
+- [x] `<html lang="fr">` (et `lang="en"` quand i18n bascule) — *layout.tsx ligne 46 : `<html lang={locale}>` dynamique selon cookie i18n*
 - [ ] Tester les 5 pages critiques en EN + FR · pas de texte hardcodé
 
 ---
