@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@libsql/client";
+import { sql } from "drizzle-orm";
+import { createDb } from "@akjol/db";
 
 /**
  * Endpoint de diag temporaire — à supprimer une fois le bug Vercel/Turso fix.
  * GET /api/_debug/turso → retourne ce que le runtime voit vraiment.
  *
  * Aucun secret n'est exposé : on log uniquement scheme/host/length, pas les
- * valeurs réelles du token ou de la SQL row.
+ * valeurs réelles du token ni le contenu des rows.
  */
 export async function GET() {
   const url = process.env.TURSO_DATABASE_URL ?? "";
@@ -28,13 +29,18 @@ export async function GET() {
   }
 
   try {
-    const client = createClient({ url, authToken: token });
-    const res = await client.execute("SELECT COUNT(*) as n FROM users");
-    info.queryRows = res.rows;
-    info.queryColumnTypes = res.columnTypes;
+    const db = createDb("./data/akjol.db");
+    const rows = (await db.all(sql.raw("SELECT COUNT(*) as n FROM users"))) as Array<{
+      n: number;
+    }>;
+    info.userCount = rows[0]?.n;
     return NextResponse.json({ ok: true, info });
   } catch (err) {
-    const e = err as { message?: string; code?: string; cause?: { message?: string; status?: number } };
+    const e = err as {
+      message?: string;
+      code?: string;
+      cause?: { message?: string; status?: number };
+    };
     return NextResponse.json({
       ok: false,
       reason: "libsql_threw",
