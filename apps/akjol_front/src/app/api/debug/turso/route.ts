@@ -4,7 +4,7 @@ import { createDb } from "@akjol/db";
 
 /**
  * Endpoint de diag temporaire — à supprimer une fois le bug Vercel/Turso fix.
- * GET /api/_debug/turso → retourne ce que le runtime voit vraiment.
+ * GET /api/debug/turso → retourne ce que le runtime voit vraiment.
  *
  * Aucun secret n'est exposé : on log uniquement scheme/host/length, pas les
  * valeurs réelles du token ni le contenu des rows.
