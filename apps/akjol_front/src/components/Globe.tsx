@@ -18,7 +18,7 @@ const ReactGlobe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
 type CountryFeature = Feature<Geometry, { name?: string }> & { id?: string | number };
 
-const TOPO_URL = "https://unpkg.com/world-atlas@2/countries-110m.json";
+const TOPO_URL = "/data/countries-110m.json";
 
 export function Globe({ height = 560 }: { height?: number }) {
   const router = useRouter();
