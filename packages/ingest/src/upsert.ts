@@ -125,6 +125,7 @@ async function upsertOne(
       schoolCity: p.schoolCity,
       schoolType: p.schoolType,
       schoolWebsiteUrl: p.schoolWebsiteUrl,
+      schoolUai: p.schoolUai ?? null,
 
       languageCode: p.languageCode,
       languageMinLevel: p.languageMinLevel,
@@ -184,6 +185,7 @@ async function upsertOne(
       schoolCity: p.schoolCity,
       schoolType: p.schoolType,
       schoolWebsiteUrl: p.schoolWebsiteUrl,
+      schoolUai: p.schoolUai ?? null,
 
       languageCode: p.languageCode,
       languageMinLevel: p.languageMinLevel,

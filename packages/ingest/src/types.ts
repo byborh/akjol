@@ -4,7 +4,7 @@
  * forme alignée sur la table `programs` (packages/db), prête à upsert.
  */
 
-export type IngestSource = "onisep" | "mon_master" | "ucas" | "common_app";
+export type IngestSource = "onisep" | "parcoursup" | "mon_master" | "ucas" | "common_app";
 
 export type ProgramLevel =
   | "lycee"
@@ -46,6 +46,12 @@ export type NormalizedProgram = {
   schoolCity: string;
   schoolType: string | null;
   schoolWebsiteUrl: string | null;
+  /**
+   * Code UAI officiel de l'établissement, quand la source le fournit (ex.
+   * Parcoursup expose `cod_uai`). Permet de lier la fiche à la table `schools`
+   * dès l'ingestion. Null si la source ne le donne pas (ex. ONISEP types).
+   */
+  schoolUai?: string | null;
 
   // Langue / coût / admission
   languageCode: string;

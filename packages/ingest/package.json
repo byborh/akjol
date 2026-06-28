@@ -12,6 +12,8 @@
   "scripts": {
     "ingest": "tsx src/cli.ts",
     "ingest:onisep": "tsx src/cli.ts onisep",
+    "ingest:parcoursup": "tsx src/cli.ts parcoursup",
+    "ingest:parcoursup:it": "tsx src/cli.ts parcoursup --it",
     "ingest:mon-master": "tsx src/cli.ts mon-master",
     "ingest:ucas": "tsx src/cli.ts ucas",
     "ingest:common-app": "tsx src/cli.ts common-app",

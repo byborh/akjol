@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { createDb } from "@akjol/db";
 import { runIngestion } from "./upsert.js";
 import { createOnisepAdapter } from "./sources/onisep.js";
+import { createParcoursupAdapter } from "./sources/parcoursup.js";
 import { createMonMasterAdapter } from "./sources/mon-master.js";
 import { createUcasAdapter } from "./sources/ucas.js";
 import { createCommonAppAdapter } from "./sources/common-app.js";
@@ -21,6 +22,7 @@ Usage:
 
 Sources:
   onisep        ONISEP — Idéo-Formations FR (CSV public, ~60k formations)
+  parcoursup    Parcoursup — fiches par établissement (CSV MESR public)
   mon-master    Mon Master — masters universitaires FR (stub)
   ucas          UCAS — top 50 universités UK (stub)
   common-app    Common App — colleges US (stub)
@@ -28,8 +30,13 @@ Sources:
 
 Options:
   --limit N     stop après N programmes (utile pour dev/test)
+  --it          (parcoursup) ne ramène que le domaine informatique Bac+2/3
   --db PATH     SQLite path (défaut: ./data/akjol.db ou env AKJOL_DB)
   --help        affiche cette aide
+
+Exemples:
+  pnpm ingest parcoursup --it --limit 200    # smoke test info
+  pnpm ingest parcoursup --it                # tout l'informatique Bac+2/3
 `;
 
 async function main(): Promise<void> {
@@ -41,12 +48,18 @@ async function main(): Promise<void> {
 
   const cmd = argv[0];
   const limit = parseFlag(argv, "--limit");
+  const itOnly = argv.includes("--it");
   const dbPath = parseFlag(argv, "--db") ?? DB_PATH;
 
   const db = createDb(dbPath);
 
   const adapters: Record<string, () => SourceAdapter> = {
     onisep: () => createOnisepAdapter(limit ? { limit: Number(limit) } : {}),
+    parcoursup: () =>
+      createParcoursupAdapter({
+        ...(limit ? { limit: Number(limit) } : {}),
+        itOnly,
+      }),
     "mon-master": () => createMonMasterAdapter(),
     ucas: () => createUcasAdapter(),
     "common-app": () => createCommonAppAdapter(),
