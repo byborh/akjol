@@ -14,15 +14,23 @@ plus à la main.
 
 ## Vue d'ensemble : 3 pipelines
 
-| Pipeline | Commande | Ce qu'il fait | Qui |
-|----------|----------|---------------|-----|
-| **A — Parcoursup** | `pnpm ingest:parcoursup:it` | Ingère les vraies fiches info par établissement (nom, ville, **UAI réel**, capacité, lien) | Technique |
-| **B — Enrichissement LLM** | `pnpm enrich:llm -- --apply` | Remplit débouchés / diplômes acceptés / description / poursuites via Claude | Technique (lancement), Data (relecture) |
-| **C — Import tableur** | `pnpm import:programs -- fichier.csv --apply` | Importe des fiches saisies dans un Google Sheet (écoles privées, cas manquants) | Data |
-| **D — Curation Admin** | UI `/admin/programs` | Relecture finale, correction, bascule `isCurated` | Data |
+| Pipeline | Commande | Ce qu'il fait | Coût | Qui |
+|----------|----------|---------------|------|-----|
+| **A — Parcoursup** | `pnpm ingest:parcoursup:it` | Ingère les vraies fiches info par établissement (nom, ville, **UAI réel**, capacité, lien) | gratuit | Technique |
+| **B — Enrichissement par règles** | `pnpm enrich:rules -- --apply` | Remplit débouchés / diplômes acceptés / domaines / poursuites depuis un dictionnaire par type de diplôme | **gratuit** | Technique |
+| **C — Import tableur** | `pnpm import:programs -- fichier.csv --apply` | Importe des fiches saisies dans un Google Sheet (écoles privées, cas manquants) | gratuit | Data |
+| **D — Curation Admin** | UI `/admin/programs` | Relecture finale, correction, bascule `isCurated` | gratuit | Data |
+| **(option) B′ — Enrichissement LLM** | `pnpm enrich:llm -- --apply` | Idem B mais via Claude (par fiche, payant) | payant | — |
 
-**Workflow recommandé** : A (volume) → B (champs pénibles) → D (relecture) ; C en
-parallèle pour ce qui manque aux datasets publics (Epitech, 42, Ynov…).
+**Workflow recommandé** : A (volume) → B (champs pénibles, gratuit) → D (relecture) ;
+C en parallèle pour ce qui manque aux datasets publics (Epitech, 42, Ynov…).
+
+> Pourquoi B suffit sans IA : les débouchés/diplômes acceptés/poursuites d'un type
+> de diplôme sont **identiques quel que soit l'établissement** (un BUT Info a les
+> mêmes débouchés à Lyon ou à Lille). On écrit la connaissance une fois par type
+> dans `scripts/data/it-formation-refs.ts`, et B l'applique à toutes les fiches.
+> Déterministe, instantané, 0 €. Le pipeline LLM (B′) reste disponible si un jour
+> tu veux des descriptions sur-mesure par établissement.
 
 ---
 
@@ -31,8 +39,8 @@ parallèle pour ce qui manque aux datasets publics (Epitech, 42, Ynov…).
 ```bash
 pnpm install
 # .env.local doit contenir :
-#   AKJOL_DB=...           (ou TURSO_DATABASE_URL + TURSO_AUTH_TOKEN)
-#   ANTHROPIC_API_KEY=...  (pour le pipeline B)
+#   AKJOL_DB=...                (ou TURSO_DATABASE_URL + TURSO_AUTH_TOKEN)
+#   ANTHROPIC_API_KEY=...       (UNIQUEMENT pour l'option payante B′ ; inutile sinon)
 pnpm db:push          # applique le schéma
 pnpm seed:iut         # 30 IUT (établissements BUT Info) — déjà prévus
 ```
@@ -61,31 +69,33 @@ Résultat : des fiches `source=parcoursup`, `isCurated=false`, prêtes à enrich
 
 ---
 
-## Pipeline B — Enrichissement LLM (les champs « vite chiants »)
+## Pipeline B — Enrichissement par règles (gratuit, les champs « vite chiants »)
 
-Prend les fiches info brutes, va lire la page de l'école si dispo, et fait
-remplir par Claude : description, domaines, **débouchés**, **diplômes acceptés**,
-niveaux de poursuite, semaines de stage.
+Rattache chaque fiche info brute à son **type de diplôme** (BUT Info, BTS SIO,
+MMI…) et lui applique les débouchés / diplômes acceptés / domaines / poursuites /
+durée définis une seule fois dans `scripts/data/it-formation-refs.ts`.
 
 ```bash
-# DRY-RUN (n'écrit rien, montre ce que Claude propose)
-pnpm enrich:llm -- --limit 10
+# DRY-RUN : montre les correspondances trouvées (et les libellés non reconnus)
+pnpm enrich:rules
 
-# Écrit les champs (la fiche reste à curer en Admin)
-pnpm enrich:llm -- --limit 50 --apply
+# Remplit les champs VIDES (n'écrase rien ; la fiche reste à curer)
+pnpm enrich:rules -- --apply
 
-# Écrit ET bascule isCurated=true (seulement si tu as confiance)
-pnpm enrich:llm -- --apply --curate
-
-# Plus rapide, sans aller chercher la page web
-pnpm enrich:llm -- --apply --no-fetch
+# Remplit + bascule isCurated=true
+pnpm enrich:rules -- --apply --curate
 ```
 
-- Sortie **structurée** (JSON garanti conforme au schéma) — pas de parsing hasardeux.
-- Chaque résultat porte une `confidence` (low/medium/high) ; relire en priorité les `low`.
-- Modèle par défaut : `claude-opus-4-8`. Pour réduire le coût sur gros volume :
-  `AKJOL_ENRICH_MODEL=claude-haiku-4-5 pnpm enrich:llm -- --apply`.
-- **Toujours relire en Admin** avant de considérer une fiche fiable.
+- **Ne remplit que les champs vides** — n'écrase jamais une donnée déjà présente
+  (ex. débouchés venus de Parcoursup). Corrige la durée (BTS = 2 ans).
+- Le DRY-RUN liste les **libellés non reconnus** : s'il en revient souvent un, ajoute
+  une entrée dans `scripts/data/it-formation-refs.ts` (≈ 5 min) et relance.
+- Couvre déjà : BUT Info, BUT MMI, BUT R&T, BTS SIO, BTS SNIR, BTS CIEL,
+  licences info, licences pro info, bachelors info.
+
+> **Option payante B′ (LLM)** — si tu veux un jour des descriptions sur-mesure par
+> établissement : `pnpm enrich:llm -- --limit 10` (dry-run), puis `--apply`.
+> Nécessite `ANTHROPIC_API_KEY`. À réserver aux cas où le générique ne suffit pas.
 
 ---
 
@@ -140,7 +150,7 @@ débouchés / URLs / dates, bascule `isCurated`.
 ## Checklist « lot informatique terminé »
 
 - [ ] Parcoursup info ingéré (`pnpm ingest:parcoursup:it`)
-- [ ] Enrichissement LLM passé sur le périmètre (`pnpm enrich:llm -- --apply`)
+- [ ] Enrichissement par règles passé sur le périmètre (`pnpm enrich:rules -- --apply`)
 - [ ] Fiches relues + curées en Admin (`isCurated = true`)
 - [ ] UAI réels des IUT renseignés (remplacer les `999…`)
 - [ ] Écoles privées clés ajoutées via tableur
