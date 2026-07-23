@@ -17,6 +17,14 @@
 export type FormationRef = {
   /** Identifiant lisible (logs). */
   key: string;
+  /** Nom court pour les titres (ex: "BTS SIO"). */
+  short: string;
+  /** Libellé propre affiché (ex: "BTS Services informatiques aux organisations (SIO)"). */
+  label: string;
+  /** Code formation interne (BTS, BUT, LICENCE…). */
+  code: string;
+  /** ProgramLevel AkJol. */
+  level: string;
   /** Match sur le libellé normalisé (MAJUSCULES, sans accents). */
   test: RegExp;
   /** Durée en années (corrige l'inférence : BTS = 2, BUT = 3…). */
@@ -33,6 +41,10 @@ export type FormationRef = {
 export const IT_FORMATION_REFS: FormationRef[] = [
   {
     key: "BUT_MMI",
+    short: "BUT MMI",
+    label: "BUT Métiers du multimédia et de l'internet (MMI)",
+    code: "BUT",
+    level: "bachelor",
     test: /MMI|MULTIMEDIA|METIERS DU MULTIMEDIA|MULTIMEDIA ET DE L INTERNET/,
     durationYears: 3,
     domains: ["Développement web", "Communication numérique", "Audiovisuel", "UX / Design"],
@@ -52,6 +64,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "BUT_RT",
+    short: "BUT R&T",
+    label: "BUT Réseaux et télécommunications (R&T)",
+    code: "BUT",
+    level: "bachelor",
     test: /(BUT|DUT|B\.?U\.?T).*(RESEAUX ET TELECOM|RESEAUX & TELECOM|\bR&T\b|\bRT\b)/,
     durationYears: 3,
     domains: ["Réseaux", "Télécoms", "Systèmes", "Cybersécurité"],
@@ -69,6 +85,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "BTS_SIO",
+    short: "BTS SIO",
+    label: "BTS Services informatiques aux organisations (SIO)",
+    code: "BTS",
+    level: "bachelor",
     test: /BTS.*SIO|SERVICES INFORMATIQUES AUX ORGANISATIONS|\bSISR\b|\bSLAM\b/,
     durationYears: 2,
     domains: ["Réseaux", "Systèmes", "Développement", "Cybersécurité"],
@@ -86,6 +106,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "BTS_SNIR",
+    short: "BTS SNIR",
+    label: "BTS Systèmes numériques – Informatique et réseaux (SNIR)",
+    code: "BTS",
+    level: "bachelor",
     test: /\bSNIR\b|SYSTEMES NUMERIQUES.*INFORMATIQUE ET RESEAUX/,
     durationYears: 2,
     domains: ["Réseaux", "Systèmes embarqués", "Télécoms"],
@@ -102,6 +126,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "BTS_CIEL",
+    short: "BTS CIEL",
+    label: "BTS Cybersécurité, informatique et réseaux, électronique (CIEL)",
+    code: "BTS",
+    level: "bachelor",
     test: /\bCIEL\b|CYBERSECURITE.*INFORMATIQUE ET RESEAUX/,
     durationYears: 2,
     domains: ["Cybersécurité", "Réseaux", "Électronique", "IoT"],
@@ -119,6 +147,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "BUT_INFO",
+    short: "BUT Informatique",
+    label: "BUT Informatique",
+    code: "BUT",
+    level: "bachelor",
     test: /(BUT|DUT|B\.?U\.?T|D\.?U\.?T).*INFORMATIQUE/,
     durationYears: 3,
     domains: ["Développement logiciel", "Bases de données", "Réseaux", "Systèmes"],
@@ -137,6 +169,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "LICENCE_PRO_INFO",
+    short: "Licence pro info",
+    label: "Licence professionnelle informatique",
+    code: "LICENCE_PRO",
+    level: "licence_pro",
     test: /LICENCE PRO.*(INFORMATIQUE|NUMERIQUE|RESEAUX|DEVELOPPEMENT|DONNEES|WEB|CYBER)|LICENCE PRO METIERS DE L INFORMATIQUE/,
     durationYears: 1,
     domains: ["Développement", "Administration systèmes", "Données", "Cybersécurité"],
@@ -154,6 +190,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "LICENCE_INFO",
+    short: "Licence Informatique",
+    label: "Licence Informatique",
+    code: "LICENCE",
+    level: "licence",
     test: /LICENCE.*INFORMATIQUE|\bLICENCE\b.*(NUMERIQUE|MATHS.*INFO)/,
     durationYears: 3,
     domains: ["Algorithmique", "Programmation", "Bases de données", "Réseaux"],
@@ -170,6 +210,10 @@ export const IT_FORMATION_REFS: FormationRef[] = [
   },
   {
     key: "BACHELOR_INFO",
+    short: "Bachelor informatique",
+    label: "Bachelor informatique",
+    code: "BACHELOR",
+    level: "bachelor",
     test: /BACHELOR.*(INFORMATIQUE|NUMERIQUE|DEVELOPPEMENT|\bDATA\b|WEB|CYBER)/,
     durationYears: 3,
     domains: ["Développement", "Gestion de projet", "Numérique"],
