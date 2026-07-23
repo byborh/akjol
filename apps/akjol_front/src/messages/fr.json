@@ -133,7 +133,8 @@
     "domainAffaires": "Affaires",
     "domainArts": "Arts",
     "domainDroit": "Droit",
-    "domainSh": "Sciences humaines"
+    "domainSh": "Sciences humaines",
+    "establishmentsCount": "{count, plural, =1 {1 établissement} other {# établissements}}"
   },
   "jobs": {
     "tag": "Catalogue métiers",
@@ -264,5 +265,18 @@
     "switch": "Langue",
     "fr": "Français",
     "en": "English"
+  },
+  "formation": {
+    "back": "Retour au catalogue",
+    "yearsSuffix": "{years, plural, =1 {1 an} other {# ans}}",
+    "establishments": "{count, plural, =1 {1 établissement} other {# établissements}}",
+    "aboutTitle": "À propos de la formation",
+    "jobsTitle": "Débouchés & accès",
+    "outcomesJobs": "Métiers visés",
+    "acceptedTitle": "Diplômes acceptés",
+    "establishmentsTitle": "Où la suivre",
+    "free": "Gratuit",
+    "costPerYear": "{value}/an",
+    "gaugeHint": "Estimation basée sur ton passeport"
   }
 }

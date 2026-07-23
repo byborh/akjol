@@ -36,6 +36,7 @@ import { applyTrajectory, useTrajectoryStore } from "../../../store/trajectory-s
 import { useEquivalencesStore } from "../../../store/equivalences-store";
 import { findSchoolByProgram } from "../../../data/schools";
 import { useMounted } from "../../../hooks/useMounted";
+import { formationKey } from "../../../lib/formation-grouping";
 import { BudgetSummary } from "../../../components/BudgetSummary";
 import { VisaSection } from "../../../components/VisaSection";
 import { PlanBSection } from "../../../components/PlanBSection";
@@ -80,9 +81,10 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
 
   const otherSchoolsTeachingThisFormation = useMemo<Program[]>(() => {
     if (!program) return [];
-    return allPrograms.filter(
-      (p) => p.formationCode === program.formationCode && p.id !== program.id,
-    );
+    // Même formation = même identité (libellé + niveau + pays), pas seulement le
+    // code (BTS regroupe SIO/SNIR/CIEL — trop large).
+    const key = formationKey(program);
+    return allPrograms.filter((p) => formationKey(p) === key && p.id !== program.id);
   }, [program, allPrograms]);
 
   if (!mounted || programLoading) return null;

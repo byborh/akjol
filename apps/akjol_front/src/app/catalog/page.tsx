@@ -18,7 +18,8 @@ import { applyTrajectory, useTrajectoryStore } from "../../store/trajectory-stor
 import { useEquivalencesStore } from "../../store/equivalences-store";
 import type { EquivalenceEdge } from "../../data/equivalences";
 import { useMounted } from "../../hooks/useMounted";
-import type { Program, ProgramLevel } from "../../types";
+import { groupFormations, type FormationGroup } from "../../lib/formation-grouping";
+import type { ProgramLevel } from "../../types";
 
 const SchoolMap = dynamic(() => import("../../components/SchoolMap"), {
   ssr: false,
@@ -132,6 +133,10 @@ function CatalogInner() {
     });
   }, [programs, search, country, level, domain]);
 
+  // Regroupe les offres filtrées par formation (BTS SIO affiché une seule fois).
+  const formationGroups = useMemo(() => groupFormations(filteredFormations), [filteredFormations]);
+  const totalFormationCount = useMemo(() => groupFormations(programs).length, [programs]);
+
   const filteredSchools = useMemo(() => {
     const q = normalize(search.trim());
     return allSchools.filter((s) => {
@@ -165,7 +170,7 @@ function CatalogInner() {
             boxShadow: view === "formations" ? "0 1px 2px rgba(0,0,0,0.04)" : undefined,
           }}
         >
-          {t("tabFormations", { count: isLoading ? 0 : programs.length })}
+          {t("tabFormations", { count: isLoading ? 0 : totalFormationCount })}
         </button>
         <button
           onClick={() => setView("schools")}
@@ -257,7 +262,7 @@ function CatalogInner() {
 
         <div className="mt-3 text-[11px] text-[#1a1d24]/50">
           {view === "formations"
-            ? t("countFormations", { count: filteredFormations.length })
+            ? t("countFormations", { count: formationGroups.length })
             : t("countSchools", { count: filteredSchools.length })}
           {effective ? (
             <span className="ml-2 inline-flex items-center gap-1">
@@ -274,11 +279,11 @@ function CatalogInner() {
 
       {view === "formations" ? (
         <div className="grid sm:grid-cols-2 gap-3">
-          {filteredFormations.length === 0 ? (
+          {formationGroups.length === 0 ? (
             <p className="text-sm text-[#1a1d24]/60">{t("noFormations")}</p>
           ) : null}
-          {filteredFormations.map((p) => (
-            <CatalogProgramCard key={p.id} program={p} effective={effective} edges={equivEdges} />
+          {formationGroups.map((g) => (
+            <CatalogFormationCard key={g.key} group={g} effective={effective} edges={equivEdges} />
           ))}
         </div>
       ) : (
@@ -344,20 +349,23 @@ function CatalogInner() {
   );
 }
 
-function CatalogProgramCard({
-  program,
+function CatalogFormationCard({
+  group,
   effective,
   edges,
 }: {
-  program: Program;
+  group: FormationGroup;
   effective: ReturnType<typeof applyTrajectory> | null;
   edges: EquivalenceEdge[];
 }) {
   const t = useTranslations("catalog");
-  const feasibility = effective ? computeFeasibility(effective, program, edges) : null;
+  // La faisabilité dépend de la formation (diplômes acceptés, niveau), pas de
+  // l'établissement : on la calcule sur une offre représentative.
+  const rep = group.offerings[0];
+  const feasibility = effective ? computeFeasibility(effective, rep, edges) : null;
   return (
     <Link
-      href={`/program/${program.id}`}
+      href={`/formation/${group.key}`}
       className="block rounded-xl bg-white border border-black/5 hover:border-[#ee7768]/40 hover:shadow-md transition p-4"
     >
       <div className="flex items-start gap-3">
@@ -369,13 +377,13 @@ function CatalogProgramCard({
               </span>
             )}
           </div>
-          <h3 className="font-medium text-[#1a1d24] leading-snug">{program.title}</h3>
-          <p className="text-[12px] text-[#1a1d24]/60 mt-0.5">
-            {program.school.name} · {program.school.city}
+          <h3 className="font-medium text-[#1a1d24] leading-snug">{group.formationLabel}</h3>
+          <p className="text-[12px] text-[#ee7768] font-medium mt-0.5 inline-flex items-center gap-1">
+            📍 {t("establishmentsCount", { count: group.offerings.length })}
           </p>
-          {program.outcomesJobs.length ? (
+          {group.outcomesJobs.length ? (
             <div className="flex flex-wrap gap-1 mt-2">
-              {program.outcomesJobs.slice(0, 3).map((j) => (
+              {group.outcomesJobs.slice(0, 3).map((j) => (
                 <span
                   key={j}
                   className="px-2 py-0.5 rounded-full bg-[#ee776815] text-[#a8463a] text-[11px]"
@@ -383,8 +391,8 @@ function CatalogProgramCard({
                   {j}
                 </span>
               ))}
-              {program.outcomesJobs.length > 3 ? (
-                <span className="text-[11px] text-[#1a1d24]/50">+{program.outcomesJobs.length - 3}</span>
+              {group.outcomesJobs.length > 3 ? (
+                <span className="text-[11px] text-[#1a1d24]/50">+{group.outcomesJobs.length - 3}</span>
               ) : null}
             </div>
           ) : null}

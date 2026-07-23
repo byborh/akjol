@@ -133,7 +133,8 @@
     "domainAffaires": "Business",
     "domainArts": "Arts",
     "domainDroit": "Law",
-    "domainSh": "Humanities"
+    "domainSh": "Humanities",
+    "establishmentsCount": "{count, plural, =1 {1 school} other {# schools}}"
   },
   "jobs": {
     "tag": "Jobs catalog",
@@ -264,5 +265,18 @@
     "switch": "Language",
     "fr": "Français",
     "en": "English"
+  },
+  "formation": {
+    "back": "Back to catalog",
+    "yearsSuffix": "{years, plural, =1 {1 year} other {# years}}",
+    "establishments": "{count, plural, =1 {1 school} other {# schools}}",
+    "aboutTitle": "About this program",
+    "jobsTitle": "Outcomes & access",
+    "outcomesJobs": "Target jobs",
+    "acceptedTitle": "Accepted diplomas",
+    "establishmentsTitle": "Where to study it",
+    "free": "Free",
+    "costPerYear": "{value}/yr",
+    "gaugeHint": "Estimate based on your passport"
   }
 }
