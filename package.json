@@ -19,6 +19,7 @@
     "seed:iut": "tsx --env-file=.env.local scripts/seed-iut.ts",
     "seed:equivalences": "tsx --env-file=.env.local scripts/seed-equivalences.ts",
     "build:parcoursup-csv": "tsx scripts/build-parcoursup-csv.ts",
+    "cleanup:fictive": "tsx --env-file=.env.local scripts/cleanup-fictive.ts",
     "enrich:rules": "tsx --env-file=.env.local scripts/enrich-rules.ts",
     "enrich:llm": "tsx --env-file=.env.local scripts/enrich-llm.ts",
     "import:programs": "tsx --env-file=.env.local scripts/import-programs-csv.ts",
