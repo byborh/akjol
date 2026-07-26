@@ -72,6 +72,8 @@ export type Program = {
   durationYears: number;
   language: { code: string; minLevel: CEFR };
   costPerYear: number;
+  costCurrency?: string; // ISO 4217 ; défaut EUR (rétrocompat). Devise réelle du coût.
+  iscedLevel?: number; // niveau ISCED 0..8 (comparaison internationale)
   admissionPlatform: AdmissionPlatform;
   acceptedDiplomas: string[];
   minGrade?: { value: number; scaleMax: number };

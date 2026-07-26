@@ -46,6 +46,8 @@ export default async function EditProgramPage({
     languageCode: row.language.code,
     languageMinLevel: row.language.minLevel as ProgramFormInput["languageMinLevel"],
     costPerYear: row.costPerYear,
+    costCurrency: row.costCurrency,
+    iscedLevel: row.iscedLevel,
     admissionPlatform: row.admissionPlatform as ProgramFormInput["admissionPlatform"],
     applicationOpens: row.applicationOpens ?? "",
     applicationCloses: row.applicationCloses ?? "",

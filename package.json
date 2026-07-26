@@ -18,6 +18,7 @@
     "seed:jobs-tech": "tsx --env-file=.env.local scripts/seed-jobs-tech.ts",
     "seed:iut": "tsx --env-file=.env.local scripts/seed-iut.ts",
     "seed:jobs": "tsx --env-file=.env.local scripts/seed-jobs.ts",
+    "migrate:international": "tsx --env-file=.env.local scripts/migrate-international.ts",
     "seed:equivalences": "tsx --env-file=.env.local scripts/seed-equivalences.ts",
     "build:parcoursup-csv": "tsx scripts/build-parcoursup-csv.ts",
     "cleanup:fictive": "tsx --env-file=.env.local scripts/cleanup-fictive.ts",

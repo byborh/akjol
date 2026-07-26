@@ -167,7 +167,9 @@ export default function FormationPage({ params }: { params: Promise<{ id: string
                         >
                           {p.costPerYear === 0
                             ? t("free")
-                            : t("costPerYear", { value: formatCost(locale, p.costPerYear) })}
+                            : t("costPerYear", {
+                                value: formatCost(locale, p.costPerYear, { fromCurrency: p.costCurrency }),
+                              })}
                         </div>
                       </div>
                       {feasibility ? <StatusBadge status={feasibility.status} /> : null}

@@ -90,7 +90,11 @@ export const programs = sqliteTable(
     formationCode: text("formation_code").notNull(),
     formationLabel: text("formation_label").notNull(),
     title: text("title").notNull(),
-    level: text("level").notNull(), // ProgramLevel
+    level: text("level").notNull(), // ProgramLevel — libellé NATIONAL (licence, bachelor…)
+    // Niveau ISCED (UNESCO, 0..8) — axe de comparaison INTERNATIONAL, indépendant
+    // du pays et du nombre d'années. Ex : Licence FR (3 ans) et Bachelor CN (4 ans)
+    // = tous deux ISCED 6. Null pour les fiches brutes non curées.
+    iscedLevel: integer("isced_level"),
     durationYears: integer("duration_years").notNull(),
     description: text("description").notNull().default(""),
 
@@ -104,6 +108,9 @@ export const programs = sqliteTable(
     languageCode: text("language_code").notNull(),
     languageMinLevel: text("language_min_level").notNull(), // CEFR
     costPerYear: integer("cost_per_year").notNull().default(0),
+    // Devise du coût (ISO 4217). Défaut EUR pour rétrocompat FR ; permet de stocker
+    // des frais en CNY, GBP, USD… sans pré-conversion (conversion à l'affichage).
+    costCurrency: text("cost_currency").notNull().default("EUR"),
     admissionPlatform: text("admission_platform").notNull(),
     applicationOpens: text("application_opens"),
     applicationCloses: text("application_closes"),

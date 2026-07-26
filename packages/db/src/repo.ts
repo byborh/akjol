@@ -56,6 +56,8 @@ export type ProgramDto = {
   durationYears: number;
   language: { code: string; minLevel: string };
   costPerYear: number;
+  costCurrency: string;
+  iscedLevel?: number;
   admissionPlatform: string;
   acceptedDiplomas: string[];
   minGrade?: { value: number; scaleMax: number };
@@ -89,6 +91,31 @@ export type JobDto = {
   matchKeywords: string[];
 };
 
+/**
+ * Niveau ISCED (UNESCO 0..8) dérivé du niveau national + durée. Rend comparables
+ * les diplômes de pays différents : Licence FR (3 ans) et Bachelor CN (4 ans) = 6.
+ */
+export function levelToIsced(level: string, durationYears: number): number {
+  switch (level) {
+    case "lycee":
+      return 3;
+    case "certif":
+      return 4;
+    case "bachelor":
+      return durationYears <= 2 ? 5 : 6; // BTS/DUT (bac+2)=5, BUT/Bachelor (bac+3)=6
+    case "licence":
+    case "licence_pro":
+      return 6;
+    case "master":
+    case "ecole_inge":
+      return 7;
+    case "doctorat":
+      return 8;
+    default:
+      return 6;
+  }
+}
+
 function rowToProgram(r: ProgramRow): ProgramDto {
   return {
     id: r.id,
@@ -106,6 +133,8 @@ function rowToProgram(r: ProgramRow): ProgramDto {
     durationYears: r.durationYears,
     language: { code: r.languageCode, minLevel: r.languageMinLevel },
     costPerYear: r.costPerYear,
+    costCurrency: r.costCurrency,
+    iscedLevel: r.iscedLevel ?? undefined,
     admissionPlatform: r.admissionPlatform,
     acceptedDiplomas: parseList<string>(r.acceptedDiplomas),
     minGrade: parseObj<{ value: number; scaleMax: number }>(r.minGrade) ?? undefined,
@@ -241,6 +270,8 @@ export type AdminProgramInput = {
   languageCode: string;
   languageMinLevel: string;
   costPerYear: number;
+  costCurrency?: string;
+  iscedLevel?: number;
   admissionPlatform: string;
   applicationOpens?: string;
   applicationCloses?: string;
@@ -285,6 +316,8 @@ function inputToRow(input: AdminProgramInput, fallbackId: string) {
     languageCode: input.languageCode,
     languageMinLevel: input.languageMinLevel,
     costPerYear: input.costPerYear,
+    costCurrency: input.costCurrency ?? "EUR",
+    iscedLevel: input.iscedLevel ?? levelToIsced(input.level, input.durationYears),
     admissionPlatform: input.admissionPlatform,
     applicationOpens: input.applicationOpens ?? null,
     applicationCloses: input.applicationCloses ?? null,
@@ -374,6 +407,8 @@ export async function updateProgramFromAdmin(
       languageCode: row.languageCode,
       languageMinLevel: row.languageMinLevel,
       costPerYear: row.costPerYear,
+      costCurrency: row.costCurrency,
+      iscedLevel: row.iscedLevel,
       admissionPlatform: row.admissionPlatform,
       applicationOpens: row.applicationOpens,
       applicationCloses: row.applicationCloses,

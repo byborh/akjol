@@ -142,7 +142,9 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
             <Coins size={14} />{" "}
             {program.costPerYear === 0
               ? t("free")
-              : t("costPerYear", { value: formatCost(locale, program.costPerYear) })}
+              : t("costPerYear", {
+                  value: formatCost(locale, program.costPerYear, { fromCurrency: program.costCurrency }),
+                })}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <MapPin size={14} /> {program.workStudy ? t("workStudyYes") : t("workStudyNo")}
@@ -317,7 +319,9 @@ export default function ProgramPage({ params }: { params: Promise<{ id: string }
                           {t("yearsSuffix", { years: sim.durationYears })} ·{" "}
                           {sim.costPerYear === 0
                             ? t("free")
-                            : t("costPerYear", { value: formatCost(locale, sim.costPerYear) })}
+                            : t("costPerYear", {
+                                value: formatCost(locale, sim.costPerYear, { fromCurrency: sim.costCurrency }),
+                              })}
                         </div>
                       </Link>
                     );
